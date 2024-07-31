@@ -3,7 +3,7 @@ from plugins.detectionlab.app.detectionlab_gui import DetectionLabGUI
 from plugins.detectionlab.app.detectionlab_api import DetectionLabAPI
 
 name = 'DetectionLab'
-description = 'Automates the infrastructure deployment for a lab environment in Proxmox currently using Packer, Terraform, and Ansible'
+description = 'Automates the infrastructure deployment for a lab environment in currently Proxmox using Packer, Vagrant, Terraform, and Ansible'
 address = '/plugin/detectionlab/gui'
 access = BaseWorld.Access.RED
 

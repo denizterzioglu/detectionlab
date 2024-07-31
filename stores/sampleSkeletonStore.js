@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 
-export const useSampleSkeletonStore = defineStore({
-  id: "skeleton",
+export const useSampleDetectionLabStore = defineStore({
+  id: "detectionlab",
   state: () => ({
     sampleStoreVariable: "Original Store Variable"
   }),

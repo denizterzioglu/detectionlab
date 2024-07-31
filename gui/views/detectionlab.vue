@@ -1,7 +1,7 @@
 <script setup>
 import { ref, inject } from "vue";
-    let name = ref("skeleton");
-    let description = ref("skeleton description");
+    let name = ref("detectionlab");
+    let description = ref("detectionlab description");
     let sampleVariable = ref("");
     const $api = inject("$api");
     function testApi(){
