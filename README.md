@@ -1,6 +1,6 @@
-# MITRE Caldera Plugin: Skeleton
+# MITRE Caldera Plugin: DetectionLab
 
-Skeleton is a Caldera plugin template
+DetectionLab is a Caldera plugin template
 
 Run the `plugin-init.py` script to easily create a new plugin
 
