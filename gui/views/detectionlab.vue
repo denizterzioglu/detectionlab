@@ -1,7 +1,7 @@
 <script setup>
 import { ref, inject } from "vue";
-    let name = ref("detectionlab");
-    let description = ref("detectionlab description");
+    let name = "DetectionLab";
+    let description = "Automates the infrastructure deployment for a lab environment in currently Proxmox using Packer, Vagrant, Terraform, and Ansible";
     let sampleVariable = ref("");
     const $api = inject("$api");
     function testApi(){
@@ -18,7 +18,7 @@ import { ref, inject } from "vue";
 </script>
 
 <template lang="pug">
-h2 {{ name }}
+h1 {{ name }}
 p {{ description }}
 button.button.fancy-button.is-fullwidth(type="button" @click="testApi()") Test API 
 button.button.fancy-button.is-fullwidth(type="button" @click="sampleFunction()") Click Me
