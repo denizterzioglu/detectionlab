@@ -1,48 +1,144 @@
-<link rel="stylesheet" href="/detectionlab/css/detectionlab.css">
-<script src="/detectionlab/js/detectionlab.js"></script>
+<div x-data="detectionLabSetup()" x-init="initPage()">
 
-<div x-data="alpineDetectionLab()" x-init="initPage()">
-    <div>
-        <h2 x-text="name"></h2>
-        <p x-text="description"></p>
+    <!-- PAGE HEADER -->
+
+    <div x-ref="headerSetup">
+        <h2>Detection Lab Setup</h2>
+        <p>
+            Automates the infrastructure deployment for a lab environment in currently Proxmox using Packer, Vagrant, Terraform, and Ansible. Choose your platform, fill in the necessary details, and initiate the setup process.
+        </p>
     </div>
     <hr>
+
+    <!-- PLATFORM SELECTION -->
+    
     <div>
-        <button class="button is-primary is-small" @click="sampleFunction()">Click Me</button>
-        <p x-text="sampleVariable"></p>
+        <form>
+            <div id="select-platform" class="field has-addons">
+                <label class="label">Select a platform &nbsp;&nbsp;&nbsp;</label>
+                <div class="control is-expanded">
+                    <div class="select is-small is-fullwidth">
+                        <select x-on:change="selectPlatform()" x-model="selectedPlatform">
+                            <option value="" disabled selected>Select a platform</option>
+                            <option value="Proxmox">Proxmox</option>
+                            <option value="Azure">Azure</option>
+                            <option value="AWS">AWS</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
+
+    <div class="has-text-centered content" x-show="!selectedPlatform">
+        <p>Select a platform to get started</p> 
+    </div>
+    
+    <div x-show="selectedPlatform">
+        <div class="box">
+            <h3 class="title is-4">Configure {{ selectedPlatform }}</h3>
+            
+            <template x-if="selectedPlatform === 'Proxmox'">
+                <form>
+                    <div class="field">
+                        <label class="label">Proxmox Host</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Proxmox Host IP" x-model="form.proxmox_host" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Proxmox Password</label>
+                        <div class="control">
+                            <input class="input" type="password" placeholder="Proxmox Password" x-model="form.proxmox_password" required>
+                        </div>
+                    </div>
+                    <!-- Add more Proxmox-specific fields as needed -->
+                </form>
+            </template>
+
+            <template x-if="selectedPlatform === 'Azure'">
+                <form>
+                    <div class="field">
+                        <label class="label">Azure Subscription ID</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Azure Subscription ID" x-model="form.azure_subscription_id" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Azure Client ID</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Azure Client ID" x-model="form.azure_client_id" required>
+                        </div>
+                    </div>
+                    <!-- Add more Azure-specific fields as needed -->
+                </form>
+            </template>
+
+            <template x-if="selectedPlatform === 'AWS'">
+                <form>
+                    <div class="field">
+                        <label class="label">AWS Access Key</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="AWS Access Key" x-model="form.aws_access_key" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">AWS Secret Key</label>
+                        <div class="control">
+                            <input class="input" type="password" placeholder="AWS Secret Key" x-model="form.aws_secret_key" required>
+                        </div>
+                    </div>
+                    <!-- Add more AWS-specific fields as needed -->
+                </form>
+            </template>
+        </div>
+
+        <button class="button is-primary" @click="submitForm()">Submit</button>
+    </div>
+
+    <!-- MODALS AND OUTPUT -->
+    <!-- Add any modals or output sections similar to your original template -->
+    
 </div>
 
 <script>
-/*
-  Templates in CALDERA are now enhanced with Alpine.js! It's essentially
-  a replacement for jQuery that has similar features to Vue and React.
-  Read up on the docs before you get started working on the UI: https://alpinejs.dev/
-*/
-
-function alpineDetectionLab() {
-    return {
-        name: '{{ name }}',
-        description: '{{ description }}',
-        sampleVariable: '',
-
-        initPage() {
-            // Sample API request
-            apiV2('GET', '/api/v2/health').then((response) => {
-                console.log('Woohoo, this page can talk to the API!');
-            }).catch((error) => {
-                // Call toast from anywhere within CALDERA to notify users of events
-                // toast(message, isSuccess)
-                toast('Error loading page', false);
-                console.error(error);
-            });
-        },
-
-        sampleFunction() {
-            this.sampleVariable = 'You clicked the button!';
-        }
-    };
-}
-
-// # sourceURL=detectionlab.js
+    function detectionLabSetup() {
+        return {
+            selectedPlatform: '',
+            form: {
+                proxmox_host: '',
+                proxmox_password: '',
+                azure_subscription_id: '',
+                azure_client_id: '',
+                aws_access_key: '',
+                aws_secret_key: ''
+            },
+            initPage() {
+                // Initialization logic if any
+            },
+            selectPlatform() {
+                // Platform-specific logic when platform changes
+                console.log('Selected platform:', this.selectedPlatform);
+            },
+            submitForm() {
+                // Submit form data based on selected platform
+                console.log('Form data:', this.form);
+                // Add logic to handle form submission for different platforms
+                if (this.selectedPlatform === 'Proxmox') {
+                    // Handle Proxmox form submission
+                } else if (this.selectedPlatform === 'Azure') {
+                    // Handle Azure form submission
+                } else if (this.selectedPlatform === 'AWS') {
+                    // Handle AWS form submission
+                }
+            }
+        };
+    }
 </script>
+
+<style scoped>
+#select-platform {
+    max-width: 800px;
+    margin: 0 auto;
+}
+</style>
