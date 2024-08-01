@@ -102,7 +102,7 @@ button.button.is-primary.is-fullwidth(@click.prevent="generateJson")
           link.href = URL.createObjectURL(blob);
           link.download = "variables.json";
           link.click();
-    
+        
           // Cleanup
           URL.revokeObjectURL(link.href);
         }
