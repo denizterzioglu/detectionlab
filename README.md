@@ -69,4 +69,3 @@ Note: Run the following commands as a root user or with sudo.
 
 1. Exchange provisioning is not yet supported.
 2. SPICE Support: Implement automated deployment of the SPICE Guest Tools. This will enable automatic screen sizing, copy and paste, and a more enhanced screen experience. At the moment, you can install the SPICE Guest Tools manually in your Windows VMs: [https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe](https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe).
-```
