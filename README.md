@@ -1,6 +1,6 @@
 # DetectionLab based on MITRE SKELETON
 
-DetectionLab is/as a CALDERA plugin that automates the infrastructure deployment for a lab environment in currently Proxmox using Packer, Vagrant, Terraform, and Ansible
+DetectionLab is/as a CALDERA plugin that automates the infrastructure deployment for a lab environment in currently Proxmox using Packer, Vagrant, Ansible, and Terraform
 
 
 # Proxmox
