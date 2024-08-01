@@ -3,8 +3,6 @@
 DetectionLab is a CALDERA plugin that automates the infrastructure deployment for a lab environment in currently Proxmox using Packer, Vagrant, Terraform, and Ansible
 
 
-Here's the provided HTML content converted into Markdown:
-
 # Proxmox
 
 ### Intro [<i class="fas fa-link fa-lg"></i>](https://detectionlab.network/deployment/proxmox/#intro)
