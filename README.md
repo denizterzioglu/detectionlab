@@ -11,7 +11,7 @@ Proxmox support for DetectionLab was a recent addition before it was discontinue
 
 A big thank you to [@sukster](https://github.com/sukster) for adding this in [PR #737](https://github.com/clong/DetectionLab/pull/737).
 
-> **Note:** I do not officially support or troubleshoot DetectionLab issues using the Proxmox provider. You’re welcome to open issues for community support, but I will not personally be able to assist with them.
+> **Note:** He does not officially support or troubleshoot DetectionLab issues using the Proxmox provider. You’re welcome to open issues for community support, but he will not personally be able to assist with them.
 
 ### Prereqs (~30-60 minutes) [<i class="fas fa-link fa-lg"></i>](https://detectionlab.network/deployment/proxmox/#prereqs-30-60-minutes)
 
