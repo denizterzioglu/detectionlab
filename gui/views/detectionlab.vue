@@ -1,3 +1,97 @@
+<script setup>
+import { inject } from "vue";
+
+const $api = inject("$api");
+</script>
+
+<style scoped>
+.field {
+    max-width: 500px;
+    margin: 0 auto;
+}
+button{
+    max-width: 500px;
+    margin: 0 auto;
+}
+</style>
+    
+<script>
+export default {
+    inject: ["$api"],
+    data() {
+    return {
+        // Form fields with sample inputs
+        proxmoxHost: "10.0.0.76",
+        proxmoxNode: "cli76",
+        proxmoxUsername: "root@cli76",
+        proxmoxPassword: "",
+        proxmoxNetworkWithDhcpAndInternet: "vmbr0",
+        provisioningMachineIp: "",
+        proxmoxVmPool: "",
+        proxmoxSkipTlsVerify: "true",
+        proxmoxDiskStoragePool: "local-lvm",
+        proxmoxDiskStorageType: "lvm-thin",
+        proxmoxIsoStoragePool: "local"
+    };
+    },
+    generateJson() {
+
+        const variablesJson = {
+            proxmox_host: this.proxmoxHost,
+            proxmox_node: this.proxmoxNode,
+            proxmox_username: this.proxmoxUsername,
+            proxmox_password: this.proxmoxPassword,
+            proxmox_network_with_dhcp_and_internet: this.proxmoxNetworkWithDhcpAndInternet,
+            provisioning_machine_ip: this.provisioningMachineIp,
+            proxmox_vm_pool: this.proxmoxVmPool,
+            proxmox_skip_tls_verify: this.proxmoxSkipTlsVerify,
+            proxmox_disk_storage_pool: this.proxmoxDiskStoragePool,
+            proxmox_disk_storage_type: this.proxmoxDiskStorageType,
+            proxmox_iso_storage_pool: this.proxmoxIsoStoragePool
+        };
+
+        // Send the JSON data to the server
+        this.$api
+            .post("/plugin/detectionlab/update-variables", variablesJson)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+            alert('Variables updated and scripts executed successfully.');
+            toast({
+                message: "Variables written",
+                position: "bottom-right",
+                type: "is-success",
+                dismissible: true,
+                pauseOnHover: true,
+                duration: 2000,
+            });
+            } else {
+            alert('An error occurred.');
+            toast({
+            message: "Error accessing API",
+            position: "bottom-right",
+            type: "is-warning",
+            dismissible: true,
+            pauseOnHover: true,
+            duration: 2000,
+          });
+            }
+        })
+        .catch((error) => {
+          console.error(error);
+          toast({
+            message: "Error writing variables",
+            position: "bottom-right",
+            type: "is-warning",
+            dismissible: true,
+            pauseOnHover: true,
+            duration: 2000,
+          });
+        });
+    }
+};
+</script>
+
 <template lang="pug">
 .content
     h2 DetectionLab
@@ -50,74 +144,9 @@ form
     label.label Proxmox ISO Storage Pool
     input.input(v-model="proxmoxIsoStoragePool", type="text", placeholder="Enter ISO Storage Pool")
 
-button.button.is-primary.is-fullwidth(@click.prevent="generateJson")
+button.button.is-primary.is-fullwidth(@click="generateJson")
     span.icon
     i.fas.fa-download
     span Generate JSON and Download
 </template>
-    
-    <script>
-    export default {
-      data() {
-        return {
-          // Form fields with sample inputs
-          proxmoxHost: "192.168.1.1",
-          proxmoxNode: "pve",
-          proxmoxUsername: "root@pam",
-          proxmoxPassword: "",
-          proxmoxNetworkWithDhcpAndInternet: "vmbr0",
-          provisioningMachineIp: "",
-          proxmoxVmPool: "",
-          proxmoxSkipTlsVerify: "true",
-          proxmoxDiskStoragePool: "local-lvm",
-          proxmoxDiskStorageType: "lvm-thin",
-          proxmoxIsoStoragePool: "local"
-        };
-      },
-      methods: {
-        generateJson() {
-          // Construct the variables JSON object
-          const variablesJson = {
-            proxmox_host: this.proxmoxHost,
-            proxmox_node: this.proxmoxNode,
-            proxmox_username: this.proxmoxUsername,
-            proxmox_password: this.proxmoxPassword,
-            proxmox_network_with_dhcp_and_internet: this.proxmoxNetworkWithDhcpAndInternet,
-            provisioning_machine_ip: this.provisioningMachineIp,
-            proxmox_vm_pool: this.proxmoxVmPool,
-            proxmox_skip_tls_verify: this.proxmoxSkipTlsVerify,
-            proxmox_disk_storage_pool: this.proxmoxDiskStoragePool,
-            proxmox_disk_storage_type: this.proxmoxDiskStorageType,
-            proxmox_iso_storage_pool: this.proxmoxIsoStoragePool
-          };
-    
-          // Convert JSON object to string
-          const jsonString = JSON.stringify(variablesJson, null, 2);
-    
-          // Create a blob with the JSON string
-          const blob = new Blob([jsonString], { type: "application/json" });
-    
-          // Create a link element and trigger the download
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = "variables.json";
-          link.click();
-        
-          // Cleanup
-          URL.revokeObjectURL(link.href);
-        }
-      }
-    };
-    </script>
-    
-    <style scoped>
-    .field {
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    button{
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    </style>
-    
+
