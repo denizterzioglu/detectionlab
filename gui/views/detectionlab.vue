@@ -26,7 +26,7 @@ export default {
             proxmoxUsername: "root@cli76",
             proxmoxPassword: "",
             proxmoxNetworkWithDhcpAndInternet: "vmbr0",
-            provisioningMachineIp: "",
+            provisioningMachineIp: "10.0.0.1",
             proxmoxVmPool: "",
             proxmoxSkipTlsVerify: "true",
             proxmoxDiskStoragePool: "local-lvm",

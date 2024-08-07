@@ -1,13 +1,13 @@
 {
-	"proxmox_host": "192.168.1.1",
-	"proxmox_node": "pve",
-	"proxmox_username": "root@pam",
-	"proxmox_password": "",
-	"proxmox_network_with_dhcp_and_internet": "vmbr0",
-	"provisioning_machine_ip": "",
-	"proxmox_vm_pool": "",
-	"proxmox_skip_tls_verify": "true",
-	"proxmox_disk_storage_pool": "local-lvm",
-	"proxmox_disk_storage_type": "lvm-thin",
-	"proxmox_iso_storage_pool": "local"
+  "proxmox_host": "10.0.0.76",
+  "proxmox_node": "cli76",
+  "proxmox_username": "root@cli76",
+  "proxmox_password": "",
+  "proxmox_network_with_dhcp_and_internet": "vmbr0",
+  "provisioning_machine_ip": "10.0.0.1",
+  "proxmox_vm_pool": "",
+  "proxmox_skip_tls_verify": "true",
+  "proxmox_disk_storage_pool": "local-lvm",
+  "proxmox_disk_storage_type": "lvm-thin",
+  "proxmox_iso_storage_pool": "local"
 }

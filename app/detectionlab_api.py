@@ -58,6 +58,10 @@ class DetectionLabAPI:
                         'success': False,
                         'error': f'Command failed with error: {stderr.decode("utf-8")}'
                     })
+            
+            subprocess.Popen('cd ../Terraform', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            
 
             return web.json_response({'success': True})
 
