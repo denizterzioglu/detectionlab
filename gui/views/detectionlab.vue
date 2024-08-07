@@ -19,75 +19,76 @@ button{
 export default {
     inject: ["$api"],
     data() {
-    return {
-        // Form fields with sample inputs
-        proxmoxHost: "10.0.0.76",
-        proxmoxNode: "cli76",
-        proxmoxUsername: "root@cli76",
-        proxmoxPassword: "",
-        proxmoxNetworkWithDhcpAndInternet: "vmbr0",
-        provisioningMachineIp: "",
-        proxmoxVmPool: "",
-        proxmoxSkipTlsVerify: "true",
-        proxmoxDiskStoragePool: "local-lvm",
-        proxmoxDiskStorageType: "lvm-thin",
-        proxmoxIsoStoragePool: "local"
-    };
-    },
-    generateJson() {
-
-        const variablesJson = {
-            proxmox_host: this.proxmoxHost,
-            proxmox_node: this.proxmoxNode,
-            proxmox_username: this.proxmoxUsername,
-            proxmox_password: this.proxmoxPassword,
-            proxmox_network_with_dhcp_and_internet: this.proxmoxNetworkWithDhcpAndInternet,
-            provisioning_machine_ip: this.provisioningMachineIp,
-            proxmox_vm_pool: this.proxmoxVmPool,
-            proxmox_skip_tls_verify: this.proxmoxSkipTlsVerify,
-            proxmox_disk_storage_pool: this.proxmoxDiskStoragePool,
-            proxmox_disk_storage_type: this.proxmoxDiskStorageType,
-            proxmox_iso_storage_pool: this.proxmoxIsoStoragePool
+        return {
+            // Form fields with sample inputs
+            proxmoxHost: "10.0.0.76",
+            proxmoxNode: "cli76",
+            proxmoxUsername: "root@cli76",
+            proxmoxPassword: "",
+            proxmoxNetworkWithDhcpAndInternet: "vmbr0",
+            provisioningMachineIp: "",
+            proxmoxVmPool: "",
+            proxmoxSkipTlsVerify: "true",
+            proxmoxDiskStoragePool: "local-lvm",
+            proxmoxDiskStorageType: "lvm-thin",
+            proxmoxIsoStoragePool: "local"
         };
+    },
+    methods: {
+        generateJson() {
+            const variablesJson = {
+                proxmox_host: this.proxmoxHost,
+                proxmox_node: this.proxmoxNode,
+                proxmox_username: this.proxmoxUsername,
+                proxmox_password: this.proxmoxPassword,
+                proxmox_network_with_dhcp_and_internet: this.proxmoxNetworkWithDhcpAndInternet,
+                provisioning_machine_ip: this.provisioningMachineIp,
+                proxmox_vm_pool: this.proxmoxVmPool,
+                proxmox_skip_tls_verify: this.proxmoxSkipTlsVerify,
+                proxmox_disk_storage_pool: this.proxmoxDiskStoragePool,
+                proxmox_disk_storage_type: this.proxmoxDiskStorageType,
+                proxmox_iso_storage_pool: this.proxmoxIsoStoragePool
+            };
 
-        // Send the JSON data to the server
-        this.$api
-            .post("/plugin/detectionlab/update-variables", variablesJson)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-            alert('Variables updated and scripts executed successfully.');
-            toast({
-                message: "Variables written",
+            // Send the JSON data to the server
+            this.$api
+                .post("/plugin/detectionlab/update-variables", variablesJson)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                alert('Variables updated and scripts executed successfully.');
+                toast({
+                    message: "Variables written",
+                    position: "bottom-right",
+                    type: "is-success",
+                    dismissible: true,
+                    pauseOnHover: true,
+                    duration: 2000,
+                });
+                } else {
+                alert('An error occurred.');
+                toast({
+                message: "Error accessing API",
                 position: "bottom-right",
-                type: "is-success",
+                type: "is-warning",
                 dismissible: true,
                 pauseOnHover: true,
                 duration: 2000,
             });
-            } else {
-            alert('An error occurred.');
+                }
+            })
+            .catch((error) => {
+            console.error(error);
             toast({
-            message: "Error accessing API",
-            position: "bottom-right",
-            type: "is-warning",
-            dismissible: true,
-            pauseOnHover: true,
-            duration: 2000,
-          });
-            }
-        })
-        .catch((error) => {
-          console.error(error);
-          toast({
-            message: "Error writing variables",
-            position: "bottom-right",
-            type: "is-warning",
-            dismissible: true,
-            pauseOnHover: true,
-            duration: 2000,
-          });
-        });
+                message: "Error writing variables",
+                position: "bottom-right",
+                type: "is-warning",
+                dismissible: true,
+                pauseOnHover: true,
+                duration: 2000,
+            });
+            });
+        }
     }
 };
 </script>
@@ -147,6 +148,6 @@ form
 button.button.is-primary.is-fullwidth(@click="generateJson")
     span.icon
     i.fas.fa-download
-    span Generate JSON and Download
+    span Generate JSON
 </template>
 

@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import asyncio
 from aiohttp import web
 from aiohttp_jinja2 import template
 
@@ -37,25 +38,26 @@ class DetectionLabAPI:
             with open(variables_path, 'w') as json_file:
                 json.dump(variables_data, json_file, indent=2)
 
-            # subprocess.Popen('cd ../data/Packer', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.Popen('cd ../data/Packer', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            # # Define the shell commands to run
-            # commands = [
-            #     'PACKER_CACHE_DIR=../../Packer/packer_cache packer build -var-file variables.json windows_10_proxmox.json',
-            #     'PACKER_CACHE_DIR=../../Packer/packer_cache packer build -var-file variables.json windows_2016_proxmox.json',
-            #     'PACKER_CACHE_DIR=../../Packer/packer_cache packer build -var-file variables.json ubuntu2004_proxmox.json'
-            # ]
+            # Define the shell commands to run
+            commands = [
+                'PACKER_CACHE_DIR=../../Packer/packer_cache packer build -var-file variables.json windows_10_proxmox.json',
+                'PACKER_CACHE_DIR=../../Packer/packer_cache packer build -var-file variables.json windows_2016_proxmox.json',
+                'PACKER_CACHE_DIR=../../Packer/packer_cache packer build -var-file variables.json ubuntu2004_proxmox.json'
+            ]
 
-            # # Execute each command in sequence
-            # for command in commands:
-            #     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #     stdout, stderr = process.communicate()
+            # Start all commands in parallel
+            processes = [subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for command in commands]
 
-            #     if process.returncode != 0:
-            #         return web.json_response({
-            #             'success': False,
-            #             'error': f'Command "{command}" failed with error: {stderr.decode("utf-8")}'
-            #         })
+            # Collect all results
+            for process in processes:
+                stdout, stderr = await asyncio.to_thread(process.communicate)
+                if process.returncode != 0:
+                    return web.json_response({
+                        'success': False,
+                        'error': f'Command failed with error: {stderr.decode("utf-8")}'
+                    })
 
             return web.json_response({'success': True})
 
