@@ -14,7 +14,6 @@ button{
     margin: 0 auto;
 }
 </style>
-    
 
 <script>
 export default {
@@ -36,12 +35,23 @@ export default {
     },
     methods: {
         generateJson() {
+            let ipWhitelistParsed;
+
+            try {
+                // Parse and format the IP whitelist
+                ipWhitelistParsed = JSON.stringify(JSON.parse(this.ipWhitelist));
+            } catch (e) {
+                // Handle parsing error
+                alert('Invalid IP Whitelist format. Please provide a valid JSON array.');
+                return;
+            }
+
             const variablesJson = {
                 region: this.region,
                 publicKeyName: this.publicKeyName,
                 publicKeyPath: this.publicKeyPath,
                 privateKeyPath: this.privateKeyPath,
-                ipWhitelist: this.ipWhitelist,
+                ipWhitelist: ipWhitelistParsed,
                 workspaceKey: this.workspaceKey,
                 workspaceID: this.workspaceID,
                 tenantID: this.tenantID,
@@ -55,42 +65,43 @@ export default {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                alert('Variables updated and scripts executed successfully.');
+                    alert('Variables updated and scripts executed successfully.');
+                    toast({
+                        message: "Variables written",
+                        position: "bottom-right",
+                        type: "is-success",
+                        dismissible: true,
+                        pauseOnHover: true,
+                        duration: 2000,
+                    });
+                } else {
+                    alert('An error occurred.');
+                    toast({
+                        message: "Error accessing API",
+                        position: "bottom-right",
+                        type: "is-warning",
+                        dismissible: true,
+                        pauseOnHover: true,
+                        duration: 2000,
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error(error);
                 toast({
-                    message: "Variables written",
+                    message: "Error writing variables",
                     position: "bottom-right",
-                    type: "is-success",
+                    type: "is-warning",
                     dismissible: true,
                     pauseOnHover: true,
                     duration: 2000,
                 });
-                } else {
-                alert('An error occurred.');
-                toast({
-                message: "Error accessing API",
-                position: "bottom-right",
-                type: "is-warning",
-                dismissible: true,
-                pauseOnHover: true,
-                duration: 2000,
-            });
-                }
-            })
-            .catch((error) => {
-            console.error(error);
-            toast({
-                message: "Error writing variables",
-                position: "bottom-right",
-                type: "is-warning",
-                dismissible: true,
-                pauseOnHover: true,
-                duration: 2000,
-            });
             });
         }
     }
 };
 </script>
+
 <template lang="pug">
 .content
     hr
@@ -144,3 +155,4 @@ button.button.is-primary.is-fullwidth(@click="generateJson")
     i.fas.fa-download
     span Generate Lab Environment    
 </template>
+    

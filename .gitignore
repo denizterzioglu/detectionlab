@@ -10,3 +10,4 @@
 .logs/*
 !.logs/.gitkeep
 data/uploads/*
+*.tfvars

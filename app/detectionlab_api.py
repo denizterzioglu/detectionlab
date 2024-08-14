@@ -120,7 +120,7 @@ class DetectionLabAPI:
             public_key_name = variables_data.get('publicKeyName', 'id_logger')
             public_key_path = variables_data.get('publicKeyPath', '/home/user/.ssh/id_logger.pub')
             private_key_path = variables_data.get('privateKeyPath', '/home/user/.ssh/id_logger.pub')
-            ip_whitelist = json.dumps(variables_data.get('ipWhitelist', ['1.2.3.4/32']))
+            ip_whitelist = variables_data.get('ipWhitelist')
             workspace_key = variables_data.get('workspaceKey')
             workspace_id = variables_data.get('workspaceID')
             tenant_id = variables_data.get('tenantID')
@@ -225,3 +225,4 @@ workspace_id           = "{workspace_id}"
 
         except Exception as e:
             return web.json_response({'success': False, 'error': str(e)})
+
