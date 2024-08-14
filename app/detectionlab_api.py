@@ -106,17 +106,12 @@ class DetectionLabAPI:
 
         except Exception as e:
             return web.json_response({'success': False, 'error': str(e)})
-        
+
     async def update_azure_variables_and_run_scripts(self, request):
         """
         This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
         """
         try:
-            # Check prerequisites
-            prerequisite_check = await self.check_prerequisites()
-            if "Error" in prerequisite_check:
-                return web.json_response({'success': False, 'error': prerequisite_check})
-
             # Parse the JSON request body
             variables_data = await request.json()
 
@@ -128,6 +123,14 @@ class DetectionLabAPI:
             ip_whitelist = json.dumps(variables_data.get('ipWhitelist', ['1.2.3.4/32']))
             workspace_key = variables_data.get('workspaceKey')
             workspace_id = variables_data.get('workspaceID')
+            tenant_id = variables_data.get('tenantID')
+            client_id = variables_data.get('clientID')
+            client_secret = variables_data.get('clientSecret')
+
+            # Check prerequisites
+            prerequisite_check = await self.check_prerequisites()
+            if "Error" in prerequisite_check:
+                return web.json_response({'success': False, 'error': prerequisite_check})
 
             # Path to the terraform.tfvars file
             variables_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/terraform.tfvars')
@@ -159,19 +162,18 @@ workspace_id           = "{workspace_id}"
             
             # Command to authenticate with Azure
             async def authenticate_azure():
-                tenant_id = 'YOUR_TENANT_ID'
-                client_id = 'YOUR_CLIENT_ID'
-                client_secret = 'YOUR_CLIENT_SECRET'
-                auth_command = f'az login --service-principal --username {client_id} --password {client_secret} --tenant {tenant_id}'
-                process = await asyncio.create_subprocess_shell(
-                    auth_command,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await process.communicate()
-                if process.returncode != 0:
-                    return f'Azure authentication failed with error: {stderr.decode("utf-8")}'
-                return 'Azure authentication successful!'
+                if tenant_id and client_id and client_secret:
+                    auth_command = f'az login --service-principal --username {client_id} --password {client_secret} --tenant {tenant_id}'
+                    process = await asyncio.create_subprocess_shell(
+                        auth_command,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout, stderr = await process.communicate()
+                    if process.returncode != 0:
+                        return f'Azure authentication failed with error: {stderr.decode("utf-8")}'
+                    return 'Azure authentication successful!'
+                return 'Azure credentials are not provided.'
 
             # Function to run a shell command
             async def run_command(command, cwd=None):

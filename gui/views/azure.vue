@@ -15,6 +15,7 @@ button{
 }
 </style>
     
+
 <script>
 export default {
     inject: ["$api"],
@@ -27,7 +28,10 @@ export default {
             privateKeyPath: "/home/user/.ssh/id_logger.pub",
             ipWhitelist: '["***.***.***.***/**"]',
             workspaceKey: "",
-            workspaceID: ""
+            workspaceID: "",
+            tenantID: "",
+            clientID: "",
+            clientSecret: ""
         };
     },
     methods: {
@@ -38,10 +42,11 @@ export default {
                 publicKeyPath: this.publicKeyPath,
                 privateKeyPath: this.privateKeyPath,
                 ipWhitelist: this.ipWhitelist,
-                provisioning_machine_ip: this.provisioningMachineIp,
                 workspaceKey: this.workspaceKey,
                 workspaceID: this.workspaceID,
-                
+                tenantID: this.tenantID,
+                clientID: this.clientID,
+                clientSecret: this.clientSecret
             };
 
             // Send the JSON data to the server
@@ -86,21 +91,19 @@ export default {
     }
 };
 </script>
-
 <template lang="pug">
 .content
     hr
     h3 Azure Environment Configuration
-    p Fill in the details below to generate the variables.json file required for automating infrastructure deployment.
+    p Fill in the details below to provide the variables required for automating infrastructure deployment.
     hr
 form
 .field.mb-4
-  .label-wrapper(style="display: flex; align-items: center;")
+    .label-wrapper(style="display: flex; align-items: center;")
     label.label(style="line-height: 1.2; margin-top: 4px;") Region
     a(href="https://azure.microsoft.com/en-us/global-infrastructure/locations/", target="_blank", style="margin-left: 8px; color: inherit; text-decoration: none; vertical-align: middle;")
-      span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
-  input.input(v-model="region", type="text", placeholder="Enter Azure region")
-
+        span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
+    input.input(v-model="region", type="text", placeholder="Enter Azure region")
 
 .field.mb-4
     span The following values must point to a valid keypair.
@@ -126,9 +129,17 @@ form
 .field.mb-4
     label.label Workspace ID
     input.input(v-model="workspaceID", type="text", placeholder="Enter workspace ID")
+.field.mb-4
+    label.label Tenant ID
+    input.input(v-model="tenantID", type="text", placeholder="Enter tenant ID")
+.field.mb-4
+    label.label Client ID
+    input.input(v-model="clientID", type="text", placeholder="Enter client ID")
+.field.mb-4
+    label.label Client Secret
+    input.input(v-model="clientSecret", type="password", placeholder="Enter client secret")
 button.button.is-primary.is-fullwidth(@click="generateJson")
     span.icon
     i.fas.fa-download
     span Generate Lab Environment    
 </template>
-
