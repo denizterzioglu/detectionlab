@@ -30,7 +30,7 @@ button{
 div.mb-6
     form
         #select-platform.field.has-addons
-            label.label.mr-5 Select a Platform
+            label.label.mr-5(style="margin-top: 4px;")  Select a Platform
             .control.is-expanded
                 .select.is-small.is-fullwidth
                     select(v-model="selectedPlatformPaw")

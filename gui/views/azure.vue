@@ -100,9 +100,9 @@ export default {
 form
 .field.mb-4
     .label-wrapper(style="display: flex; align-items: center;")
-    label.label(style="line-height: 1.2; margin-top: 4px;") Region
-    a(href="https://azure.microsoft.com/en-us/global-infrastructure/locations/", target="_blank", style="margin-left: 8px; color: inherit; text-decoration: none; vertical-align: middle;")
-        span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
+        label.label(style="line-height: 1.2; margin-top: 4px;") Region
+        a(href="https://azure.microsoft.com/en-us/global-infrastructure/locations/", target="_blank", style="margin-left: 8px; color: inherit; text-decoration: none; vertical-align: middle;")
+            span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
     input.input(v-model="region", type="text", placeholder="Enter Azure region")
 
 .field.mb-4
@@ -122,14 +122,6 @@ form
     label.label IP Whitelist 
     input.input(v-model="ipWhitelist", type="text", placeholder='["***.***.***.***/**"]')
 .field.mb-4
-    span Add your workspace key and ID if you want to use Azure Log Analytics and Azure Sentinel
-.field.mb-4
-    label.label Workspace key
-    input.input(v-model="workspaceKey", type="text", placeholder="Enter workspace key")
-.field.mb-4
-    label.label Workspace ID
-    input.input(v-model="workspaceID", type="text", placeholder="Enter workspace ID")
-.field.mb-4
     label.label Tenant ID
     input.input(v-model="tenantID", type="text", placeholder="Enter tenant ID")
 .field.mb-4
@@ -138,6 +130,15 @@ form
 .field.mb-4
     label.label Client Secret
     input.input(v-model="clientSecret", type="password", placeholder="Enter client secret")
+.field.mb-4
+    span Add your workspace key and ID if you want to use Azure Log Analytics and Azure Sentinel
+.field.mb-4
+    label.label Workspace key (Optional)
+    input.input(v-model="workspaceKey", type="text", placeholder="Enter workspace key")
+.field.mb-4
+    label.label Workspace ID (Optional)
+    input.input(v-model="workspaceID", type="text", placeholder="Enter workspace ID")
+
 button.button.is-primary.is-fullwidth(@click="generateJson")
     span.icon
     i.fas.fa-download
