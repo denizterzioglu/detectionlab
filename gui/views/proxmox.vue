@@ -52,7 +52,7 @@ export default {
 
             // Send the JSON data to the server
             this.$api
-                .post("/plugin/detectionlab/update-variables", variablesJson)
+                .post("/plugin/detectionlab/update-proxmox-variables", variablesJson)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -95,7 +95,7 @@ export default {
 
 <template lang="pug">
 .content
-    
+    hr
     h3 Proxmox Environment Configuration
     p Fill in the details below to generate the variables.json file required for automating infrastructure deployment.
     hr
