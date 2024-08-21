@@ -148,6 +148,6 @@ form
 button.button.is-primary.is-fullwidth(@click="generateJson")
     span.icon
     i.fas.fa-download
-    span Generate JSON
+    span Generate Lab Environment
 </template>
 

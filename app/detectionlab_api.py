@@ -56,9 +56,9 @@ class DetectionLabAPI:
         for cmd, tool_name in tools.items():
             if not self.check_command(cmd):
                 return f"Error: {tool_name} is not installed or not found in the PATH."
-        
+            
         # Check SSH keypair
-        ssh_keypair_path = '/home/user/.ssh/id_logger'  # Adjust this path as needed
+        ssh_keypair_path = '/home/user/.ssh/id_logger'
         if not self.check_ssh_keypair(ssh_keypair_path):
             return f"Error: SSH keypair not found at {ssh_keypair_path}."
 
@@ -112,20 +112,41 @@ class DetectionLabAPI:
         This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
         """
         try:
-            # Parse the JSON request body
-            variables_data = await request.json()
+            # Handle multipart/form-data
+            reader = await request.multipart()
+            variables_data = {}
 
-            # Extract variables from the request
-            region = variables_data.get('region', 'germany')
+            # Temporary path to store uploaded SSH key file
+            priv_ssh_key_path = None
+
+            async for field in reader:
+                if field.name == 'ssh_key':
+                    filename = field.filename
+                    priv_ssh_key_path = f"/home/user/.ssh/{filename}"
+
+                    with open(priv_ssh_key_path, 'wb') as f:
+                        while True:
+                            chunk = await field.read_chunk()
+                            if not chunk:
+                                break
+                            f.write(chunk)            
+                else:
+                    variables_data[field.name] = await field.text()
+
+            # Extract variables from the parsed data
+            region = variables_data.get('region', 'germanywestcentral')
             public_key_name = variables_data.get('publicKeyName', 'id_logger')
-            public_key_path = variables_data.get('publicKeyPath', '/home/user/.ssh/id_logger.pub')
-            private_key_path = variables_data.get('privateKeyPath', '/home/user/.ssh/id_logger.pub')
+            public_key_value = variables_data.get('publicKeyValue')
+            public_ssh_key_path = f"/home/user/.ssh/{public_key_name}.pub"
             ip_whitelist = variables_data.get('ipWhitelist')
             workspace_key = variables_data.get('workspaceKey')
             workspace_id = variables_data.get('workspaceID')
             tenant_id = variables_data.get('tenantID')
             client_id = variables_data.get('clientID')
             client_secret = variables_data.get('clientSecret')
+
+            with open(public_ssh_key_path, "wb") as f:
+                f.write(public_key_value)
 
             # Check prerequisites
             prerequisite_check = await self.check_prerequisites()
@@ -140,15 +161,14 @@ class DetectionLabAPI:
                 tfvars_file.write(f"""
 region                 = "{region}"
 public_key_name         = "{public_key_name}"
-public_key_path         = "{public_key_path}"
-private_key_path        = "{private_key_path}"
+public_key_path         = "{public_ssh_key_path}"
+private_key_path        = "{priv_ssh_key_path}"
 ip_whitelist           = {ip_whitelist}
 """)
                 
-                # Conditionally include workspace_key and workspace_id
                 if workspace_key and workspace_id:
                     tfvars_file.write(f"""
-# Uncomment the following lines and add your key if you want to use Azure Log Analytics and Azure Sentinel
+# Added the following lines for your key because you want to use Azure Log Analytics and Azure Sentinel
 workspace_key          = "{workspace_key}"
 workspace_id           = "{workspace_id}"
 """)
@@ -225,4 +245,3 @@ workspace_id           = "{workspace_id}"
 
         except Exception as e:
             return web.json_response({'success': False, 'error': str(e)})
-
