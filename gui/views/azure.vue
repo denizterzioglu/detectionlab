@@ -1,5 +1,6 @@
 <script setup>
 import { inject, ref } from "vue";
+import { toast } from "bulma-toast";
 
 const $api = inject("$api");
 const sshKey = ref(null); // Reference to hold the SSH key file
@@ -10,10 +11,10 @@ const form = ref({
   publicKeyValue: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIOeeDuJNFgNkL6hdK45AQLcnsVl5bnVi8fTM147u/BR generated-by-azure",
   workspaceKey: "",
   workspaceID: "",
-  tenantID: "",
-  clientID: "",
+  tenantID: "10c04932-a7ec-4924-b5dd-3fe916e518fe",
+  clientID: "6b318441-aa93-458b-96f1-2ba1c2896bd9",
   clientSecret: "",
-  ipWhitelist: '["***.***.***.***/**"]'
+  ipWhitelist: '["80.156.43.31/64"]'
 });
 
 const handleFileUpload = (event) => {
@@ -120,7 +121,7 @@ form
     label.label Public key name
     input.input(v-model="form.publicKeyName", type="text", placeholder="Enter public key name")
   .field.mb-4
-    label.label Public key alue
+    label.label Public key value
     input.input(v-model="form.publicKeyValue", type="text", placeholder="Enter public key value")
   .field.mb-4
     label.label Private Key Upload
@@ -130,6 +131,11 @@ form
   .field.mb-4    
     label.label IP Whitelist 
     input.input(v-model="form.ipWhitelist", type="text", placeholder='["***.***.***.***/**"]')
+  .field.mb-4
+    .label-wrapper(style="display: flex; align-items: center;")
+      span The following values must point to a valid service principle defined in Azure's app registeration .
+      a(href="https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps", target="_blank", style="margin-left: 8px; color: inherit; text-decoration: none; vertical-align: middle;")
+        span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
   .field.mb-4
     label.label Tenant ID
     input.input(v-model="form.tenantID", type="text", placeholder="Enter tenant ID")
