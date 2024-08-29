@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import asyncio
+import shutil
 from pathlib import Path
 from aiohttp import web
 from aiohttp_jinja2 import template
@@ -23,12 +24,6 @@ class DetectionLabAPI:
         request_body = json.loads(await request.read())
         return web.json_response(request_body)
 
-    def check_command(self, command: str) -> bool:
-        """
-        Check if a command is available in the system's PATH.
-        """
-        return subprocess.call(f"command -v {command}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
-
     def check_ssh_keypair(self, keypair_path: str) -> bool:
         """
         Check if the SSH keypair files exist at the specified path.
@@ -45,22 +40,41 @@ class DetectionLabAPI:
         - Azure CLI installed and in PATH
         - SSH keypair exists
         """
-        # Commands to check
+        # Commands to check and their installation commands
         tools = {
-            'terraform': 'Terraform',
-            'ansible': 'Ansible',
-            'az': 'Azure CLI'
+            'terraform': {
+                'name': 'Terraform',
+                'install_command': 'sudo apt-get install -y terraform'  # Adjust command according to the OS and package manager
+            },
+            'ansible': {
+                'name': 'Ansible',
+                'install_command': 'sudo apt-get install -y ansible'  # Adjust command according to the OS and package manager
+            },
+            'az': {
+                'name': 'Azure CLI',
+                'install_command': 'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'  # Adjust command according to the OS
+            }
         }
 
         # Check if all tools are installed
-        for cmd, tool_name in tools.items():
-            if not self.check_command(cmd):
-                return f"Error: {tool_name} is not installed or not found in the PATH."
-            
-        # Check SSH keypair
-        ssh_keypair_path = '/home/user/.ssh/id_logger'
-        if not self.check_ssh_keypair(ssh_keypair_path):
-            return f"Error: SSH keypair not found at {ssh_keypair_path}."
+        for cmd, tool_info in tools.items():
+            exists = shutil.which(cmd) is not None
+            if not exists:
+                print(f"{tool_info['name']} is not installed or not found in the PATH.")
+                try:
+                    # Attempt to install the missing tool
+                    print(f"Attempting to install {tool_info['name']}...")
+                    result = subprocess.run(tool_info['install_command'], shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    print(result.stdout.decode())
+                    print(f"{tool_info['name']} installed successfully.")
+                except subprocess.CalledProcessError as e:
+                    print(f"Failed to install {tool_info['name']}. Error: {e.stderr.decode()}")
+                    return f"Error: {tool_info['name']} could not be installed automatically."
+     
+        # # Check SSH keypair
+        # ssh_keypair_path = '~/.ssh/id_logger'
+        # if not self.check_ssh_keypair(ssh_keypair_path):
+        #     return f"Error: SSH keypair not found at {ssh_keypair_path}."
 
         return "All prerequisites are met."
 
@@ -112,6 +126,9 @@ class DetectionLabAPI:
         This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
         """
         try:
+            home = os.getenv("HOME")
+            cwd = os.getcwd()
+            plugin =f"{cwd}/plugins/detectionlab"
             # Handle multipart/form-data
             reader = await request.multipart()
             variables_data = {}
@@ -122,9 +139,9 @@ class DetectionLabAPI:
             async for field in reader:
                 if field.name == 'ssh_key':
                     filename = field.filename
-                    priv_ssh_key_path = f"/home/user/.ssh/{filename}"
+                    priv_ssh_key_path = f"{home}/.ssh/{filename}"
 
-                    with open(priv_ssh_key_path, 'wb') as f:
+                    with open(priv_ssh_key_path, 'wb+') as f:
                         while True:
                             chunk = await field.read_chunk()
                             if not chunk:
@@ -137,7 +154,7 @@ class DetectionLabAPI:
             region = variables_data.get('region', 'germanywestcentral')
             public_key_name = variables_data.get('publicKeyName', 'id_logger')
             public_key_value = variables_data.get('publicKeyValue')
-            public_ssh_key_path = f"/home/user/.ssh/{public_key_name}.pub"
+            public_ssh_key_path = f"{home}/.ssh/{public_key_name}.pub"
             ip_whitelist = variables_data.get('ipWhitelist')
             workspace_key = variables_data.get('workspaceKey')
             workspace_id = variables_data.get('workspaceID')
@@ -145,7 +162,7 @@ class DetectionLabAPI:
             client_id = variables_data.get('clientID')
             client_secret = variables_data.get('clientSecret')
 
-            with open(public_ssh_key_path, "wb") as f:
+            with open(public_ssh_key_path, "w+") as f:
                 f.write(public_key_value)
 
             # Check prerequisites
@@ -157,7 +174,7 @@ class DetectionLabAPI:
             variables_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/terraform.tfvars')
 
             # Write the data to terraform.tfvars
-            with open(variables_path, 'w') as tfvars_file:
+            with open(variables_path, 'w+') as tfvars_file:
                 tfvars_file.write(f"""
 region                 = "{region}"
 public_key_name         = "{public_key_name}"
@@ -172,13 +189,6 @@ ip_whitelist           = {ip_whitelist}
 workspace_key          = "{workspace_key}"
 workspace_id           = "{workspace_id}"
 """)
-
-            # Define shell commands for Terraform and Azure
-            terraform_dir = '../data/azure/Terraform'
-            terraform_commands = [
-                'terraform init',
-                'terraform apply --auto-approve'
-            ]
             
             # Command to authenticate with Azure
             async def authenticate_azure():
@@ -194,6 +204,11 @@ workspace_id           = "{workspace_id}"
                         return f'Azure authentication failed with error: {stderr.decode("utf-8")}'
                     return 'Azure authentication successful!'
                 return 'Azure credentials are not provided.'
+            
+            # Authenticate to Azure
+            auth_message = await authenticate_azure()
+            if "failed" in auth_message:
+                return web.json_response({'success': False, 'error': auth_message})
 
             # Function to run a shell command
             async def run_command(command, cwd=None):
@@ -205,25 +220,47 @@ workspace_id           = "{workspace_id}"
                 )
                 stdout, stderr = await process.communicate()
                 return process.returncode, stdout.decode('utf-8'), stderr.decode('utf-8')
+            
+            # Define shell commands for Terraform
+            terraform_dir = f'{plugin}/data/azure/Terraform'
+            terraform_commands = [
+                'terraform init',
+                'terraform apply --auto-approve'
+            ]
 
-            # Authenticate to Azure
-            auth_message = await authenticate_azure()
-            if "failed" in auth_message:
-                return web.json_response({'success': False, 'error': auth_message})
-
-            # Run Terraform commands
-            terraform_tasks = [run_command(cmd, cwd=terraform_dir) for cmd in terraform_commands]
-            terraform_results = await asyncio.gather(*terraform_tasks)
-
-            for returncode, stdout, stderr in terraform_results:
-                if returncode != 0:
+            # Run Terraform commands with a delay
+            async def delay_terraform_commands():
+                # Run terraform init
+                init_result = await run_command(terraform_commands[0], cwd=terraform_dir)
+                if init_result[0] != 0:
                     return web.json_response({
                         'success': False,
-                        'error': f'Terraform command failed with error: {stderr}'
+                        'error': f'Terraform init failed with error: {init_result[2]}'
                     })
+                print("Terraform init complete")
+
+                # Add a delay to ensure init completes
+                await asyncio.sleep(5)  # Adjust the delay if needed
+
+                # Run terraform apply
+                apply_result = await run_command(terraform_commands[1], cwd=terraform_dir)
+                if apply_result[0] != 0:
+                    return web.json_response({
+                        'success': False,
+                        'error': f'Terraform apply failed with error: {apply_result[2]}'
+                    })
+                print("Terraform apply complete")
+
+                return web.json_response({
+                    'success': True,
+                    'output': apply_result[1]
+                })
+
+            # Execute the Terraform sequence
+            terraform_results = await delay_terraform_commands()
 
             # Provisioning with Ansible
-            ansible_dir = '../data/azure/Ansible'
+            ansible_dir = f'{plugin}/data/azure/Ansible'
             ansible_commands = [
                 'ansible-playbook -v detectionlab.yml --tags "dc"',
                 'ansible-playbook -v detectionlab.yml --tags "wef"',

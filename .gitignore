@@ -11,3 +11,4 @@
 !.logs/.gitkeep
 data/uploads/*
 *.tfvars
+data/azure/Terraform/.terraform*

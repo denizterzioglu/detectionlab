@@ -19,14 +19,14 @@ variable "public_key_name" {
 variable "public_key_path" {
   description = "Path to the public key to be loaded into the logger authorized_keys file"
   type        = string
-  default     = "/home/user/.ssh/id_logger.pub"
+  default     = "~/.ssh/id_logger.pub"
 }
 
 # Note: must use ssh key without passphrase. not supported by Terraform.
 variable "private_key_path" {
   description = "Path to the private key to use to authenticate to logger."
   type        = string
-  default     = "/home/user/.ssh/id_logger"
+  default     = "~/.ssh/id_logger"
 }
 
 variable "ip_whitelist" {

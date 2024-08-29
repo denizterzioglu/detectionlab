@@ -3,6 +3,8 @@ import { inject, ref } from "vue";
 import { toast } from "bulma-toast";
 
 const $api = inject("$api");
+const labState = inject("labState"); // Inject global state for lab generation
+
 const sshKey = ref(null); // Reference to hold the SSH key file
 
 const form = ref({
@@ -14,7 +16,7 @@ const form = ref({
   tenantID: "10c04932-a7ec-4924-b5dd-3fe916e518fe",
   clientID: "6b318441-aa93-458b-96f1-2ba1c2896bd9",
   clientSecret: "",
-  ipWhitelist: '["80.156.43.31/64"]'
+  ipWhitelist: '["80.156.43.31"]'
 });
 
 const handleFileUpload = (event) => {
@@ -61,6 +63,11 @@ const generateJson = () => {
         pauseOnHover: true,
         duration: 2000,
       });
+
+      // Update global state to indicate lab is generated
+      labState.isLabGenerated = true;
+      labState.generatedPlatform = 'Azure'; // Indicate platform
+
     } else {
       alert('An error occurred.');
       toast({
@@ -145,17 +152,9 @@ form
   .field.mb-4
     label.label Client Secret
     input.input(v-model="form.clientSecret", type="password", placeholder="Enter client secret")
-  .field.mb-4
-    span Add your workspace key and ID if you want to use Azure Log Analytics and Azure Sentinel
-  .field.mb-4
-    label.label Workspace key (Optional)
-    input.input(v-model="form.workspaceKey", type="text", placeholder="Enter workspace key")
-  .field.mb-4
-    label.label Workspace ID (Optional)
-    input.input(v-model="form.workspaceID", type="text", placeholder="Enter workspace ID")
 
-  button.button.is-primary.is-fullwidth(@click="generateJson")
+  button.button.is-primary.is-fullwidth(type="button" @click="generateJson")
     span.icon
       i.fas.fa-download
-    span Generate Lab Environment    
+    span Generate Lab Environment
 </template>
