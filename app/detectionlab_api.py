@@ -228,37 +228,30 @@ workspace_id           = "{workspace_id}"
                 'terraform apply --auto-approve'
             ]
 
-            # Run Terraform commands with a delay
-            async def delay_terraform_commands():
-                # Run terraform init
-                init_result = await run_command(terraform_commands[0], cwd=terraform_dir)
-                if init_result[0] != 0:
-                    return web.json_response({
-                        'success': False,
-                        'error': f'Terraform init failed with error: {init_result[2]}'
-                    })
-                print("Terraform init complete")
-
-                # Add a delay to ensure init completes
-                await asyncio.sleep(5)  # Adjust the delay if needed
-
-                # Run terraform apply
-                apply_result = await run_command(terraform_commands[1], cwd=terraform_dir)
-                if apply_result[0] != 0:
-                    return web.json_response({
-                        'success': False,
-                        'error': f'Terraform apply failed with error: {apply_result[2]}'
-                    })
-                print("Terraform apply complete")
-
+            # Run terraform init
+            init_result = await run_command(terraform_commands[0], cwd=terraform_dir)
+            if init_result[0] != 0:
                 return web.json_response({
-                    'success': True,
-                    'output': apply_result[1]
+                    'success': False,
+                    'error': f'Terraform init failed with error: {init_result[2]}'
                 })
+            print("Terraform init complete")
 
-            # Execute the Terraform sequence
-            terraform_results = await delay_terraform_commands()
+            # Add a delay to ensure init completes
+            await asyncio.sleep(5)  # Adjust the delay if needed
 
+            # Run terraform apply
+            apply_result = await run_command(terraform_commands[1], cwd=terraform_dir)
+            if apply_result[0] != 0:
+                return web.json_response({
+                    'success': False,
+                    'error': f'Terraform apply failed with error: {apply_result[2]}'
+                })
+            print("Terraform apply complete")
+
+            # Configuring the inventory.yml file
+            subprocess.call(['sh', f'{plugin}/data/azure/build_ansible_inventory.sh'])
+            
             # Provisioning with Ansible
             ansible_dir = f'{plugin}/data/azure/Ansible'
             ansible_commands = [
