@@ -249,9 +249,13 @@ workspace_id           = "{workspace_id}"
                 })
             print("Terraform apply complete")
 
+            # Add a delay to ensure DC, WEF, and WIN10 have fininshed creation
+            await asyncio.sleep(150)  # Adjust the delay usually around 2 minutes
+
             # Configuring the inventory.yml file
+            subprocess.call(['sh', f'chmod +x {plugin}/data/azure/build_ansible_inventory.sh'])
             subprocess.call(['sh', f'{plugin}/data/azure/build_ansible_inventory.sh'])
-            
+
             # Provisioning with Ansible
             ansible_dir = f'{plugin}/data/azure/Ansible'
             ansible_commands = [
