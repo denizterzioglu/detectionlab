@@ -78,6 +78,7 @@ class DetectionLabAPI:
         This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
         """
         try:
+            print('Azure deployment started')
             home = os.getenv("HOME")
             cwd = os.getcwd()
             plugin = f"{cwd}/plugins/detectionlab"
@@ -116,6 +117,8 @@ class DetectionLabAPI:
             client_secret = variables_data.get('clientSecret')
             subscription_id = variables_data.get('subscriptionID')
 
+            print('Variables extracted')
+
             with open(public_ssh_key_path, "w+") as f:
                 f.write(public_key_value)
 
@@ -123,6 +126,8 @@ class DetectionLabAPI:
             prerequisite_check = await self.check_prerequisites()
             if "Error" in prerequisite_check:
                 return web.json_response({'success': False, 'error': prerequisite_check})
+            
+            print('Pre-req checks successfull')
 
             # Path to the terraform.tfvars file
             variables_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/terraform.tfvars')
@@ -135,6 +140,7 @@ public_key_name         = "{public_key_name}"
 public_key_path         = "{public_ssh_key_path}"
 private_key_path        = "{priv_ssh_key_path}"
 ip_whitelist           = {ip_whitelist}
+subscription_id         = "{subscription_id}"
 """)
                 
                 if workspace_key and workspace_id:
@@ -143,26 +149,8 @@ ip_whitelist           = {ip_whitelist}
 workspace_key          = "{workspace_key}"
 workspace_id           = "{workspace_id}"
 """)        
-            # Path to the terraform.tfvars file
-            main_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/main.tf')
 
-            # Open the main.tf file in read mode
-            with open(main_path, 'r') as file:
-                main = file.read()
-
-            provider = '''
-# Specify the provider and access details
-provider "azurerm" {
-'''
-            updated_provider = f'''
-{provider}
-    subscription_id = "{subscription_id}"
-    # other provider properties
-'''
-            new_main = main.replace(provider, updated_provider)
-
-            with open(main_path, 'w') as new_file:
-                new_file.write(new_main)
+            print('Variables written')
 
             # Shell script path
             shell_script_path = os.path.join(os.path.dirname(__file__), '../data/azure/run_azure_setup.sh')

@@ -53,3 +53,9 @@ variable "workspaceId" {
   default     = ""
 }
 
+variable "subscription_id" {
+  description = "Subscription ID of the Azure account"
+  type        = string
+  default     = ""
+}
+

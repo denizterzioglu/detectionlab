@@ -10,8 +10,10 @@
 # * apply: linux provisioning
 #	=> works but script ends with error code for some reason (post bro install and splunk restart)
 
+
 # Specify the provider and access details
 provider "azurerm" {
+  subscription_id = var.subscription_id
   features {}
 }
 

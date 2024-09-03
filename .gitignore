@@ -12,3 +12,4 @@
 data/uploads/*
 *.tfvars
 data/azure/Terraform/.terraform*
+*.tfstate
