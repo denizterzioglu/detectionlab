@@ -553,7 +553,7 @@ resource "azurerm_virtual_machine" "win10" {
   location = var.region
   resource_group_name  = azurerm_resource_group.detectionlab.name
   network_interface_ids = [azurerm_network_interface.win10-nic.id]
-  vm_size               = "Standard_D1_v2"
+  vm_size               = "Standard_D2s_v3"
 
   delete_os_disk_on_termination = true
 
