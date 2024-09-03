@@ -3,10 +3,15 @@ import os
 import subprocess
 import asyncio
 import shutil
+import logging
 from pathlib import Path
 from aiohttp import web
 from aiohttp_jinja2 import template
 from app.service.auth_svc import for_all_public_methods, check_authorization
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @for_all_public_methods(check_authorization)
 class DetectionLabAPI:
@@ -40,7 +45,6 @@ class DetectionLabAPI:
         - Azure CLI installed and in PATH
         - SSH keypair exists
         """
-        # Commands to check and their installation commands
         tools = {
             'terraform': {
                 'name': 'Terraform',
@@ -56,21 +60,25 @@ class DetectionLabAPI:
             }
         }
 
-        # Check if all tools are installed
         for cmd, tool_info in tools.items():
             exists = shutil.which(cmd) is not None
             if not exists:
-                print(f"{tool_info['name']} is not installed or not found in the PATH.")
+                logger.warning(f"{tool_info['name']} is not installed or not found in the PATH.")
                 try:
-                    # Attempt to install the missing tool
-                    print(f"Attempting to install {tool_info['name']}...")
-                    result = subprocess.run(tool_info['install_command'], shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    print(result.stdout.decode())
-                    print(f"{tool_info['name']} installed successfully.")
+                    logger.info(f"Attempting to install {tool_info['name']}...")
+                    result = subprocess.run(
+                        tool_info['install_command'], 
+                        shell=True, 
+                        check=True, 
+                        stdout=subprocess.PIPE, 
+                        stderr=subprocess.PIPE
+                    )
+                    logger.info(result.stdout.decode())
+                    logger.info(f"{tool_info['name']} installed successfully.")
                 except subprocess.CalledProcessError as e:
-                    print(f"Failed to install {tool_info['name']}. Error: {e.stderr.decode()}")
+                    logger.error(f"Failed to install {tool_info['name']}. Error: {e.stderr.decode()}")
                     return f"Error: {tool_info['name']} could not be installed automatically."
-        
+
         return "All prerequisites are met."
 
     async def update_azure_variables_and_run_scripts(self, request):
@@ -78,7 +86,7 @@ class DetectionLabAPI:
         This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
         """
         try:
-            print('Azure deployment started')
+            logger.info('Azure deployment started')
             home = os.getenv("HOME")
             cwd = os.getcwd()
             plugin = f"{cwd}/plugins/detectionlab"
@@ -87,7 +95,6 @@ class DetectionLabAPI:
             reader = await request.multipart()
             variables_data = {}
 
-            # Temporary path to store uploaded SSH key file
             priv_ssh_key_path = None
 
             async for field in reader:
@@ -104,7 +111,6 @@ class DetectionLabAPI:
                 else:
                     variables_data[field.name] = await field.text()
 
-            # Extract variables from the parsed data
             region = variables_data.get('region', 'germanywestcentral')
             public_key_name = variables_data.get('publicKeyName', 'id_logger')
             public_key_value = variables_data.get('publicKeyValue')
@@ -117,22 +123,19 @@ class DetectionLabAPI:
             client_secret = variables_data.get('clientSecret')
             subscription_id = variables_data.get('subscriptionID')
 
-            print('Variables extracted')
+            logger.info('Variables extracted')
 
             with open(public_ssh_key_path, "w+") as f:
                 f.write(public_key_value)
 
-            # Check prerequisites
             prerequisite_check = await self.check_prerequisites()
             if "Error" in prerequisite_check:
                 return web.json_response({'success': False, 'error': prerequisite_check})
             
-            print('Pre-req checks successfull')
+            logger.info('Pre-req checks successful')
 
-            # Path to the terraform.tfvars file
             variables_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/terraform.tfvars')
 
-            # Write the data to terraform.tfvars
             with open(variables_path, 'w+') as tfvars_file:
                 tfvars_file.write(f"""
 region                 = "{region}"
@@ -145,17 +148,15 @@ subscription_id         = "{subscription_id}"
                 
                 if workspace_key and workspace_id:
                     tfvars_file.write(f"""
-# Added the following lines for your key because you want to use Azure Log Analytics and Azure Sentinel
 workspace_key          = "{workspace_key}"
 workspace_id           = "{workspace_id}"
-""")        
+""")
 
-            print('Variables written')
+            logger.info('Variables written')
 
-            # Shell script path
             shell_script_path = os.path.join(os.path.dirname(__file__), '../data/azure/run_azure_setup.sh')
 
-            # Execute the shell script to handle Azure auth, Terraform, and Ansible
+            # Start subprocess to run the shell script
             process = await asyncio.create_subprocess_exec(
                 'bash', shell_script_path,
                 tenant_id, client_id, client_secret,
@@ -166,17 +167,36 @@ workspace_id           = "{workspace_id}"
                 stderr=asyncio.subprocess.PIPE
             )
 
-            stdout, stderr = await process.communicate()
+            logger.info('Shell script execution started')
+
+            # Read the output incrementally
+            while True:
+                line = await process.stdout.readline()
+                if not line:
+                    break
+                logger.info(line.decode().strip())
+
+            # Read the error output incrementally
+            while True:
+                line = await process.stderr.readline()
+                if not line:
+                    break
+                logger.error(line.decode().strip())
+
+            # Wait for the process to complete
+            await process.wait()
 
             if process.returncode != 0:
                 return web.json_response({
                     'success': False,
-                    'error': f'Script execution failed with error: {stderr.decode("utf-8")}'
+                    'error': 'Script execution failed. Check logs for details.'
                 })
 
-            return web.json_response({'success': True, 'output': stdout.decode('utf-8')})
+            logger.info('Shell script executed successfully.')
+            return web.json_response({'success': True, 'output': 'Script executed successfully'})
 
         except Exception as e:
+            logger.exception('An error occurred during the Azure deployment process.')
             return web.json_response({'success': False, 'error': str(e)})
 
 

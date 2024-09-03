@@ -560,7 +560,7 @@ resource "azurerm_virtual_machine" "win10" {
   storage_image_reference {
     publisher = "MicrosoftWindowsDesktop"
     offer     = "Windows-10"
-    sku       = "19h1-pron"
+    sku       = "19h1-pron-gensecond"
     version   = "latest"
   }
 
