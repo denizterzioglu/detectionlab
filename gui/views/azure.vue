@@ -15,6 +15,7 @@ const form = ref({
   workspaceID: "",
   tenantID: "10c04932-a7ec-4924-b5dd-3fe916e518fe",
   clientID: "6b318441-aa93-458b-96f1-2ba1c2896bd9",
+  subscriptionID: "eb8d4547-b055-4f7a-a699-b5d7696020d2",
   clientSecret: "",
   ipWhitelist: '["80.156.43.31"]'
 });
@@ -143,6 +144,9 @@ form
       span The following values must point to a valid service principle defined in Azure's app registeration .
       a(href="https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps", target="_blank", style="margin-left: 8px; color: inherit; text-decoration: none; vertical-align: middle;")
         span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
+  .field.mb-4
+    label.label Subscription ID
+    input.input(v-model="form.subscriptionID", type="text", placeholder="Enter subscription ID")
   .field.mb-4
     label.label Tenant ID
     input.input(v-model="form.tenantID", type="text", placeholder="Enter tenant ID")

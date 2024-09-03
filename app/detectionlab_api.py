@@ -19,7 +19,7 @@ class DetectionLabAPI:
     @template('detectionlab.html')
     async def mirror(self, request):
         """
-        This sample endpoint mirrors the request body in its response
+        This sample endpoint mirrors the request body in its response.
         """
         request_body = json.loads(await request.read())
         return web.json_response(request_body)
@@ -44,15 +44,15 @@ class DetectionLabAPI:
         tools = {
             'terraform': {
                 'name': 'Terraform',
-                'install_command': 'sudo apt-get install -y terraform'  # Adjust command according to the OS and package manager
+                'install_command': 'sudo apt-get install -y terraform'
             },
             'ansible': {
                 'name': 'Ansible',
-                'install_command': 'sudo apt-get install -y ansible'  # Adjust command according to the OS and package manager
+                'install_command': 'sudo apt-get install -y ansible'
             },
             'az': {
                 'name': 'Azure CLI',
-                'install_command': 'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'  # Adjust command according to the OS
+                'install_command': 'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'
             }
         }
 
@@ -70,13 +70,127 @@ class DetectionLabAPI:
                 except subprocess.CalledProcessError as e:
                     print(f"Failed to install {tool_info['name']}. Error: {e.stderr.decode()}")
                     return f"Error: {tool_info['name']} could not be installed automatically."
-     
-        # # Check SSH keypair
-        # ssh_keypair_path = '~/.ssh/id_logger'
-        # if not self.check_ssh_keypair(ssh_keypair_path):
-        #     return f"Error: SSH keypair not found at {ssh_keypair_path}."
-
+        
         return "All prerequisites are met."
+
+    async def update_azure_variables_and_run_scripts(self, request):
+        """
+        This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
+        """
+        try:
+            home = os.getenv("HOME")
+            cwd = os.getcwd()
+            plugin = f"{cwd}/plugins/detectionlab"
+
+            # Handle multipart/form-data
+            reader = await request.multipart()
+            variables_data = {}
+
+            # Temporary path to store uploaded SSH key file
+            priv_ssh_key_path = None
+
+            async for field in reader:
+                if field.name == 'ssh_key':
+                    filename = field.filename
+                    priv_ssh_key_path = f"{home}/.ssh/{filename}"
+
+                    with open(priv_ssh_key_path, 'wb+') as f:
+                        while True:
+                            chunk = await field.read_chunk()
+                            if not chunk:
+                                break
+                            f.write(chunk)
+                else:
+                    variables_data[field.name] = await field.text()
+
+            # Extract variables from the parsed data
+            region = variables_data.get('region', 'germanywestcentral')
+            public_key_name = variables_data.get('publicKeyName', 'id_logger')
+            public_key_value = variables_data.get('publicKeyValue')
+            public_ssh_key_path = f"{home}/.ssh/{public_key_name}.pub"
+            ip_whitelist = variables_data.get('ipWhitelist')
+            workspace_key = variables_data.get('workspaceKey')
+            workspace_id = variables_data.get('workspaceID')
+            tenant_id = variables_data.get('tenantID')
+            client_id = variables_data.get('clientID')
+            client_secret = variables_data.get('clientSecret')
+            subscription_id = variables_data.get('subscriptionID')
+
+            with open(public_ssh_key_path, "w+") as f:
+                f.write(public_key_value)
+
+            # Check prerequisites
+            prerequisite_check = await self.check_prerequisites()
+            if "Error" in prerequisite_check:
+                return web.json_response({'success': False, 'error': prerequisite_check})
+
+            # Path to the terraform.tfvars file
+            variables_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/terraform.tfvars')
+
+            # Write the data to terraform.tfvars
+            with open(variables_path, 'w+') as tfvars_file:
+                tfvars_file.write(f"""
+region                 = "{region}"
+public_key_name         = "{public_key_name}"
+public_key_path         = "{public_ssh_key_path}"
+private_key_path        = "{priv_ssh_key_path}"
+ip_whitelist           = {ip_whitelist}
+""")
+                
+                if workspace_key and workspace_id:
+                    tfvars_file.write(f"""
+# Added the following lines for your key because you want to use Azure Log Analytics and Azure Sentinel
+workspace_key          = "{workspace_key}"
+workspace_id           = "{workspace_id}"
+""")        
+            # Path to the terraform.tfvars file
+            main_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/main.tf')
+
+            # Open the main.tf file in read mode
+            with open(main_path, 'r') as file:
+                main = file.read()
+
+            provider = '''
+# Specify the provider and access details
+provider "azurerm" {
+'''
+            updated_provider = f'''
+{provider}
+    subscription_id = "{subscription_id}"
+    # other provider properties
+'''
+            new_main = main.replace(provider, updated_provider)
+
+            with open(main_path, 'w') as new_file:
+                new_file.write(new_main)
+
+            # Shell script path
+            shell_script_path = os.path.join(os.path.dirname(__file__), '../data/azure/run_azure_setup.sh')
+
+            # Execute the shell script to handle Azure auth, Terraform, and Ansible
+            process = await asyncio.create_subprocess_exec(
+                'bash', shell_script_path,
+                tenant_id, client_id, client_secret,
+                f"{plugin}/data/azure/Terraform",
+                f"{plugin}/data/azure/Ansible",
+                f"{plugin}/data/azure/build_ansible_inventory.sh",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return web.json_response({
+                    'success': False,
+                    'error': f'Script execution failed with error: {stderr.decode("utf-8")}'
+                })
+
+            return web.json_response({'success': True, 'output': stdout.decode('utf-8')})
+
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)})
+
 
     async def update_proxmox_variables_and_run_scripts(self, request):
         """
@@ -121,161 +235,4 @@ class DetectionLabAPI:
         except Exception as e:
             return web.json_response({'success': False, 'error': str(e)})
 
-    async def update_azure_variables_and_run_scripts(self, request):
-        """
-        This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
-        """
-        try:
-            home = os.getenv("HOME")
-            cwd = os.getcwd()
-            plugin =f"{cwd}/plugins/detectionlab"
-            # Handle multipart/form-data
-            reader = await request.multipart()
-            variables_data = {}
-
-            # Temporary path to store uploaded SSH key file
-            priv_ssh_key_path = None
-
-            async for field in reader:
-                if field.name == 'ssh_key':
-                    filename = field.filename
-                    priv_ssh_key_path = f"{home}/.ssh/{filename}"
-
-                    with open(priv_ssh_key_path, 'wb+') as f:
-                        while True:
-                            chunk = await field.read_chunk()
-                            if not chunk:
-                                break
-                            f.write(chunk)            
-                else:
-                    variables_data[field.name] = await field.text()
-
-            # Extract variables from the parsed data
-            region = variables_data.get('region', 'germanywestcentral')
-            public_key_name = variables_data.get('publicKeyName', 'id_logger')
-            public_key_value = variables_data.get('publicKeyValue')
-            public_ssh_key_path = f"{home}/.ssh/{public_key_name}.pub"
-            ip_whitelist = variables_data.get('ipWhitelist')
-            workspace_key = variables_data.get('workspaceKey')
-            workspace_id = variables_data.get('workspaceID')
-            tenant_id = variables_data.get('tenantID')
-            client_id = variables_data.get('clientID')
-            client_secret = variables_data.get('clientSecret')
-
-            with open(public_ssh_key_path, "w+") as f:
-                f.write(public_key_value)
-
-            # Check prerequisites
-            prerequisite_check = await self.check_prerequisites()
-            if "Error" in prerequisite_check:
-                return web.json_response({'success': False, 'error': prerequisite_check})
-
-            # Path to the terraform.tfvars file
-            variables_path = os.path.join(os.path.dirname(__file__), '../data/azure/Terraform/terraform.tfvars')
-
-            # Write the data to terraform.tfvars
-            with open(variables_path, 'w+') as tfvars_file:
-                tfvars_file.write(f"""
-region                 = "{region}"
-public_key_name         = "{public_key_name}"
-public_key_path         = "{public_ssh_key_path}"
-private_key_path        = "{priv_ssh_key_path}"
-ip_whitelist           = {ip_whitelist}
-""")
-                
-                if workspace_key and workspace_id:
-                    tfvars_file.write(f"""
-# Added the following lines for your key because you want to use Azure Log Analytics and Azure Sentinel
-workspace_key          = "{workspace_key}"
-workspace_id           = "{workspace_id}"
-""")
-            
-            # Command to authenticate with Azure
-            async def authenticate_azure():
-                if tenant_id and client_id and client_secret:
-                    auth_command = f'az login --service-principal --username {client_id} --password {client_secret} --tenant {tenant_id}'
-                    process = await asyncio.create_subprocess_shell(
-                        auth_command,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE
-                    )
-                    stdout, stderr = await process.communicate()
-                    if process.returncode != 0:
-                        return f'Azure authentication failed with error: {stderr.decode("utf-8")}'
-                    return 'Azure authentication successful!'
-                return 'Azure credentials are not provided.'
-            
-            # Authenticate to Azure
-            auth_message = await authenticate_azure()
-            if "failed" in auth_message:
-                return web.json_response({'success': False, 'error': auth_message})
-
-            # Function to run a shell command
-            async def run_command(command, cwd=None):
-                process = await asyncio.create_subprocess_shell(
-                    command,
-                    cwd=cwd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await process.communicate()
-                return process.returncode, stdout.decode('utf-8'), stderr.decode('utf-8')
-            
-            # Define shell commands for Terraform
-            terraform_dir = f'{plugin}/data/azure/Terraform'
-            terraform_commands = [
-                'terraform init',
-                'terraform apply --auto-approve'
-            ]
-
-            # Run terraform init
-            init_result = await run_command(terraform_commands[0], cwd=terraform_dir)
-            if init_result[0] != 0:
-                return web.json_response({
-                    'success': False,
-                    'error': f'Terraform init failed with error: {init_result[2]}'
-                })
-            print("Terraform init complete")
-
-            # Add a delay to ensure init completes
-            await asyncio.sleep(5)  # Adjust the delay if needed
-
-            # Run terraform apply
-            apply_result = await run_command(terraform_commands[1], cwd=terraform_dir)
-            if apply_result[0] != 0:
-                return web.json_response({
-                    'success': False,
-                    'error': f'Terraform apply failed with error: {apply_result[2]}'
-                })
-            print("Terraform apply complete")
-
-            # Add a delay to ensure DC, WEF, and WIN10 have fininshed creation
-            await asyncio.sleep(150)  # Adjust the delay usually around 2 minutes
-
-            # Configuring the inventory.yml file
-            subprocess.call(['sh', f'chmod +x {plugin}/data/azure/build_ansible_inventory.sh'])
-            subprocess.call(['sh', f'{plugin}/data/azure/build_ansible_inventory.sh'])
-
-            # Provisioning with Ansible
-            ansible_dir = f'{plugin}/data/azure/Ansible'
-            ansible_commands = [
-                'ansible-playbook -v detectionlab.yml --tags "dc"',
-                'ansible-playbook -v detectionlab.yml --tags "wef"',
-                'ansible-playbook -v detectionlab.yml --tags "win10"'
-            ]
-            
-            # Run Ansible commands
-            ansible_tasks = [run_command(cmd, cwd=ansible_dir) for cmd in ansible_commands]
-            ansible_results = await asyncio.gather(*ansible_tasks)
-
-            for returncode, stdout, stderr in ansible_results:
-                if returncode != 0:
-                    return web.json_response({
-                        'success': False,
-                        'error': f'Ansible command failed with error: {stderr}'
-                    })
-
-            return web.json_response({'success': True})
-
-        except Exception as e:
-            return web.json_response({'success': False, 'error': str(e)})
+    
