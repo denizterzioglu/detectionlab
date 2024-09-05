@@ -69,6 +69,7 @@ main() {
     # Configure inventory for Ansible
     echo "Configuring Ansible inventory..."
     chmod +x "$inventory_script"
+    cd ..
     "$inventory_script"
     
     # Run Ansible

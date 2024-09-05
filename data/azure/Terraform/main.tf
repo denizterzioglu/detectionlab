@@ -270,9 +270,22 @@ resource "azurerm_virtual_machine" "logger" {
       "sudo add-apt-repository universe && sudo apt-get -qq update && sudo apt-get -qq install -y git",
       "sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config && sudo service ssh restart",
       "echo 'logger' | sudo tee /etc/hostname && sudo hostnamectl set-hostname logger",
-      "sudo adduser --disabled-password --gecos \"\" vagrant && echo 'vagrant:vagrant' | sudo chpasswd",
+      "id -u vagrant &>/dev/null || sudo adduser --disabled-password --gecos "" vagrant && echo 'vagrant:vagrant' | sudo chpasswd",
       "echo 'vagrant:vagrant' | sudo chpasswd",
-      "sudo mkdir /home/vagrant/.ssh && sudo cp /home/ubuntu/.ssh/authorized_keys /home/vagrant/.ssh/authorized_keys && sudo chown -R vagrant:vagrant /home/vagrant/.ssh",
+      "sudo sed -i '1i 127.0.0.1 logger' /etc/hosts",
+      "sudo tee /etc/netplan/01-netcfg.yaml > /dev/null <<EOL
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - 192.168.56.105/24
+      gateway4: 192.168.56.1
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+EOL",
+      "sudo mkdir -p /home/vagrant/.ssh && sudo cp /home/ubuntu/.ssh/authorized_keys /home/vagrant/.ssh/authorized_keys && sudo chown -R vagrant:vagrant /home/vagrant/.ssh",
       "echo 'vagrant    ALL=(ALL:ALL) NOPASSWD:ALL' | sudo tee -a /etc/sudoers",
       "sudo git clone https://github.com/clong/DetectionLab.git /opt/DetectionLab",
       "sudo sed -i 's/eth1/eth0/g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
