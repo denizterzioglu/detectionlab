@@ -72,6 +72,11 @@ main() {
     cd ..
     "$inventory_script"
 
+    chmod +x ./install-dotnet.sh
+
+    ./install-dotnet.sh -v 7.0
+
+
     pip install pywinrm
     
     # Run Ansible
