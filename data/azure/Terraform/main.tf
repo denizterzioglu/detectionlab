@@ -261,42 +261,31 @@ resource "azurerm_virtual_machine" "logger" {
   # https://github.com/terraform-providers/terraform-provider-azurerm/blob/master/examples/virtual-machines/provisioners/linux/main.tf
   # https://www.terraform.io/docs/provisioners/connection.html
   provisioner "remote-exec" {
-    connection {
-      host = azurerm_public_ip.logger-publicip.ip_address
-      user     = "vagrant"
-      private_key = file(var.private_key_path)
-    }
-    inline = [
-      "sudo add-apt-repository universe && sudo apt-get -qq update && sudo apt-get -qq install -y git",
-      "sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config && sudo service ssh restart",
-      "echo 'logger' | sudo tee /etc/hostname && sudo hostnamectl set-hostname logger",
-      "id -u vagrant &>/dev/null || sudo adduser --disabled-password --gecos "" vagrant && echo 'vagrant:vagrant' | sudo chpasswd",
-      "echo 'vagrant:vagrant' | sudo chpasswd",
-      "sudo sed -i '1i 127.0.0.1 logger' /etc/hosts",
-      "sudo tee /etc/netplan/01-netcfg.yaml > /dev/null <<EOL
-network:
-  version: 2
-  ethernets:
-    eth0:
-      dhcp4: false
-      addresses:
-        - 192.168.56.105/24
-      gateway4: 192.168.56.1
-      nameservers:
-        addresses: [8.8.8.8, 8.8.4.4]
-EOL",
-      "sudo mkdir -p /home/vagrant/.ssh && sudo cp /home/ubuntu/.ssh/authorized_keys /home/vagrant/.ssh/authorized_keys && sudo chown -R vagrant:vagrant /home/vagrant/.ssh",
-      "echo 'vagrant    ALL=(ALL:ALL) NOPASSWD:ALL' | sudo tee -a /etc/sudoers",
-      "sudo git clone https://github.com/clong/DetectionLab.git /opt/DetectionLab",
-      "sudo sed -i 's/eth1/eth0/g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
-      "sudo sed -i 's/ETH1/ETH0/g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
-      "sudo sed -i 's#/usr/local/go/bin/go get -u#GOPATH=/root/go /usr/local/go/bin/go get -u#g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
-      "sudo sed -i 's#/vagrant/resources#/opt/DetectionLab/Vagrant/resources#g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
-      "sudo chmod +x /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
-      "sudo apt-get -qq update",
-      "sudo /opt/DetectionLab/Vagrant/logger_bootstrap.sh 2>&1 |sudo tee /opt/DetectionLab/Vagrant/bootstrap.log",
-    ]
+  connection {
+    host = azurerm_public_ip.logger-publicip.ip_address
+    user = "vagrant"
+    private_key = file(var.private_key_path)
   }
+  inline = [
+    "sudo add-apt-repository universe && sudo apt-get -qq update && sudo apt-get -qq install -y git",
+    "sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config && sudo service ssh restart",
+    "echo 'logger' | sudo tee /etc/hostname && sudo hostnamectl set-hostname logger",
+    "id -u vagrant &>/dev/null || sudo adduser --disabled-password --gecos '' vagrant && echo 'vagrant:vagrant' | sudo chpasswd",
+    "echo 'vagrant:vagrant' | sudo chpasswd",
+    "sudo sed -i '1i 127.0.0.1 logger' /etc/hosts",
+    "sudo sh -c 'cat <<EOL > /etc/netplan/01-netcfg.yaml\nnetwork:\n  version: 2\n  ethernets:\n    eth0:\n      dhcp4: false\n      addresses:\n        - 192.168.56.105/24\n      gateway4: 192.168.56.1\n      nameservers:\n        addresses: [8.8.8.8, 8.8.4.4]\nEOL'",
+    "sudo mkdir -p /home/vagrant/.ssh && sudo cp /home/ubuntu/.ssh/authorized_keys /home/vagrant/.ssh/authorized_keys && sudo chown -R vagrant:vagrant /home/vagrant/.ssh",
+    "echo 'vagrant    ALL=(ALL:ALL) NOPASSWD:ALL' | sudo tee -a /etc/sudoers",
+    "sudo git clone https://github.com/clong/DetectionLab.git /opt/DetectionLab",
+    "sudo sed -i 's/eth1/eth0/g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
+    "sudo sed -i 's/ETH1/ETH0/g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
+    "sudo sed -i 's#/usr/local/go/bin/go get -u#GOPATH=/root/go /usr/local/go/bin/go get -u#g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
+    "sudo sed -i 's#/vagrant/resources#/opt/DetectionLab/Vagrant/resources#g' /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
+    "sudo chmod +x /opt/DetectionLab/Vagrant/logger_bootstrap.sh",
+    "sudo apt-get -qq update",
+    "sudo /opt/DetectionLab/Vagrant/logger_bootstrap.sh 2>&1 | sudo tee /opt/DetectionLab/Vagrant/bootstrap.log"
+  ]
+}
 
   tags = {
     role = "logger"
