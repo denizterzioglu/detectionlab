@@ -17,7 +17,7 @@ const form = ref({
   clientID: "6b318441-aa93-458b-96f1-2ba1c2896bd9",
   subscriptionID: "eb8d4547-b055-4f7a-a699-b5d7696020d2",
   clientSecret: "",
-  ipWhitelist: '["80.156.43.31"]'
+  ipWhitelist: '["80.156.43.31","46.128.83.135"]'
 });
 
 const handleFileUpload = (event) => {

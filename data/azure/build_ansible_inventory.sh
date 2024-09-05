@@ -32,7 +32,7 @@ if [ "$GREP_COUNT" -ne 3 ]; then
   echo "This script is expecting the default values of x.x.x.x, y.y.y.y, and z.z.z.z for the dc, wef, and win10 hosts respectively in Ansible/inventory.yml."
   echo "You can restore the file to this state by running 'git checkout -- Ansible/inventory.yml'"
   echo "Rerun this script once that is complete."
-  exit 1
+  exit 0
 fi
 
 echo "Replacing the default values in DetectionLab/Azure/Ansible/inventory.yml..."

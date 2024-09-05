@@ -66,11 +66,13 @@ main() {
     echo "Waiting for resources to be fully created..."
     sleep 150
     
-    # Configure inventory for Ansible
+    # Configure inventory for Ansible (can commented out because main.tf:611 does this)
     echo "Configuring Ansible inventory..."
     chmod +x "$inventory_script"
     cd ..
     "$inventory_script"
+
+    pip install pywinrm
     
     # Run Ansible
     run_ansible "$ansible_dir"
