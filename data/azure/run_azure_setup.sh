@@ -60,7 +60,7 @@ main() {
     # .NET installation
     
     chmod +x "$dotnet_script"
-    dotnet_script --version latest
+    "$dotnet_script" --version latest
     
     # Authenticate to Azure
     authenticate_azure "$tenant_id" "$client_id" "$client_secret"
