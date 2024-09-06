@@ -7,6 +7,27 @@
       - 8.8.8.8
     log_path: C:\dns_log.txt
 
+- name: Download .NET Framework 4.8 installer
+  win_get_url:
+    url: https://go.microsoft.com/fwlink/?linkid=2088631
+    dest: C:\Windows\Temp\ndp48-x86-x64-allos-enu.exe
+
+- name: Install .NET Framework 4.8 without forcing a reboot
+  win_package:
+    path: C:\Windows\Temp\ndp48-x86-x64-allos-enu.exe
+    arguments: /quiet /norestart
+    state: present
+  register: net_framework_install
+
+- name: Reboot if required
+  win_reboot:
+    msg: "Rebooting after .NET Framework 4.8 installation"
+    reboot_timeout: 600
+  when: net_framework_install.reboot_required
+
+- name: Wait for system to come back online
+  win_ping:
+
 - name: Install git
   win_chocolatey:
     name: git

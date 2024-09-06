@@ -198,6 +198,42 @@ workspace_id           = "{workspace_id}"
         except Exception as e:
             logger.exception('An error occurred during the Azure deployment process.')
             return web.json_response({'success': False, 'error': str(e)})
+    
+    def get_terraform_output():
+        try:
+            # Define the directory where terraform is located
+            terraform_directory = os.path.join(os.getcwd(), 'plugins/detectionlab/data/azure/Terraform')
+
+            # Run the terraform output command
+            command = ['terraform', 'output', '-json']
+            result = subprocess.run(command, cwd=terraform_directory, capture_output=True, text=True, check=True)
+
+            # Parse the JSON output from Terraform
+            terraform_output = json.loads(result.stdout)
+
+            # Extract necessary fields from the output
+            output_dict = {
+                'dcPublicIp': terraform_output.get('dc_public_ip', {}).get('value', ''),
+                'fleetUrl': terraform_output.get('fleet_url', {}).get('value', ''),
+                'guacamoleUrl': terraform_output.get('guacamole_url', {}).get('value', ''),
+                'loggerPublicIp': terraform_output.get('logger_public_ip', {}).get('value', ''),
+                'region': terraform_output.get('region', {}).get('value', ''),
+                'splunkUrl': terraform_output.get('splunk_url', {}).get('value', ''),
+                'velociraptorUrl': terraform_output.get('velociraptor_url', {}).get('value', ''),
+                'wefPublicIp': terraform_output.get('wef_public_ip', {}).get('value', ''),
+                'win10PublicIp': terraform_output.get('win10_public_ip', {}).get('value', '')
+            }
+
+            # Return or print the extracted data as JSON
+            return output_dict
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error running terraform: {e}")
+            return None
+
+        except Exception as e:
+            print(f"General error: {e}")
+            return None
 
 
     async def update_proxmox_variables_and_run_scripts(self, request):

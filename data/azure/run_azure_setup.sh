@@ -40,9 +40,12 @@ run_ansible() {
     echo "Running Ansible playbooks..."
     cd "$ansible_dir"
     
-    ansible-playbook -v detectionlab.yml --tags "dc"
-    ansible-playbook -v detectionlab.yml --tags "wef"
-    ansible-playbook -v detectionlab.yml --tags "win10"
+    ansible-playbook -v detectionlab.yml --tags "dc" &
+    ansible-playbook -v detectionlab.yml --tags "wef" &
+    ansible-playbook -v detectionlab.yml --tags "win10" &
+    
+    # Wait for all background jobs to finish
+    wait
     
     echo "Ansible provisioning complete."
 }

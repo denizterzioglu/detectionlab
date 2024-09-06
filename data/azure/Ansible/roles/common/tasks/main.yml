@@ -70,6 +70,9 @@
     - winpcap
     state: present
     ignore_checksums: true
+  register: utils
+
+- debug: msg="{{ utils.stdout_lines }}"
 
 
 

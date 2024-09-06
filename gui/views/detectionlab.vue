@@ -2,6 +2,7 @@
 import { provide, inject, ref, reactive, computed } from "vue";
 import proxmox from './proxmox.vue';
 import azure from './azure.vue';
+import outputs from './outputs.vue';
 
 // Reactive state for lab generation
 const labState = reactive({
@@ -57,5 +58,6 @@ div(v-if="labState.isLabGenerated")
     h3 Lab Environment Generated
     p The lab environment for {{ labState.generatedPlatform }} has been successfully generated.
     // Include logic to show additional details or redirect
+    outputs
 </template>
     
