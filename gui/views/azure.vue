@@ -24,7 +24,7 @@ const handleFileUpload = (event) => {
   sshKey.value = event.target.files[0];
 };
 
-const generateJson = () => {
+const generateLab = () => {
   let ipWhitelistParsed;
 
   try {
@@ -141,7 +141,7 @@ form
     input.input(v-model="form.ipWhitelist", type="text", placeholder='["***.***.***.***/**"]')
   .field.mb-4
     .label-wrapper(style="display: flex; align-items: center;")
-      span The following values must point to a valid service principle defined in Azure's app registeration .
+      span The following values must point to a valid service principle defined in Azure's app registration.
       a(href="https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps", target="_blank", style="margin-left: 8px; color: inherit; text-decoration: none; vertical-align: middle;")
         span.info-icon(style="font-size: 1.2em; display: inline-block; vertical-align: middle;") ℹ️
   .field.mb-4
@@ -157,7 +157,16 @@ form
     label.label Client Secret
     input.input(v-model="form.clientSecret", type="password", placeholder="Enter client secret")
 
-  button.button.is-primary.is-fullwidth(type="button" @click="generateJson")
+  .field.mb-4
+    span Add your workspace key and ID if you want to use Azure Log Analytics and Azure Sentinel
+  .field.mb-4
+      label.label Workspace key (Optional)
+      input.input(v-model="workspaceKey", type="text", placeholder="Enter workspace key")
+  .field.mb-4
+      label.label Workspace ID (Optional)
+      input.input(v-model="workspaceID", type="text", placeholder="Enter workspace ID")
+
+  button.button.is-primary.is-fullwidth(type="button" @click="generateLab")
     span.icon
       i.fas.fa-download
     span Generate Lab Environment
