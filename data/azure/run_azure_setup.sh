@@ -55,12 +55,6 @@ main() {
     terraform_dir=$4
     ansible_dir=$5
     inventory_script=$6
-    dotnet_script=$7
-
-    # .NET installation
-    
-    chmod +x "$dotnet_script"
-    "$dotnet_script"
     
     # Authenticate to Azure
     authenticate_azure "$tenant_id" "$client_id" "$client_secret"

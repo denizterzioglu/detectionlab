@@ -1,15 +1,16 @@
 ---
+# Replace the x's with the IP addresses from "terrafrom output"
 dc:
   hosts:
-    20.52.38.94:
+    x.x.x.x:
 
 wef:
   hosts:
-    20.52.38.87:
+    y.y.y.y:
 
 win10:
   hosts:
-    20.52.38.97:
+    z.z.z.z:
 
 exchange:
   hosts:

@@ -163,7 +163,6 @@ workspace_id           = "{workspace_id}"
                 f"{plugin}/data/azure/Terraform",
                 f"{plugin}/data/azure/Ansible",
                 f"{plugin}/data/azure/build_ansible_inventory.sh",
-                f"{plugin}/data/azure/install-dotnet.sh",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
