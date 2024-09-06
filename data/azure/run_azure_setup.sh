@@ -36,18 +36,14 @@ run_terraform() {
 # Run Ansible commands
 run_ansible() {
     ansible_dir=$1
+    tags=$2
     
-    echo "Running Ansible playbooks..."
+    echo "Running Ansible playbook with tags '$tags'..."
     cd "$ansible_dir"
     
-    ansible-playbook -v detectionlab.yml --tags "dc" &
-    ansible-playbook -v detectionlab.yml --tags "wef" &
-    ansible-playbook -v detectionlab.yml --tags "win10" &
+    ansible-playbook -v detectionlab.yml --tags "$tags"
     
-    # Wait for all background jobs to finish
-    wait
-    
-    echo "Ansible provisioning complete."
+    echo "Ansible playbook with tags '$tags' complete."
 }
 
 # Main script execution
@@ -77,8 +73,23 @@ main() {
 
     pip install pywinrm
     
-    # Run Ansible
-    run_ansible "$ansible_dir"
+    # Start the DC playbook
+    run_ansible "$ansible_dir" "dc" &
+    dc_playbook_pid=$!
+    
+    # Wait for 5 minutes
+    echo "Waiting for 5 minutes before starting WEF and WIN10 provisioning..."
+    sleep 300
+    
+    # Start WEF and WIN10 playbooks
+    echo "Running WEF and WIN10 playbooks..."
+    run_ansible "$ansible_dir" "wef" &
+    run_ansible "$ansible_dir" "win10" &
+    
+    # Wait for all background jobs to finish
+    wait $dc_playbook_pid
+    
+    echo "Ansible provisioning complete."
 }
 
 # Run main with all arguments
