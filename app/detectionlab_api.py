@@ -171,10 +171,15 @@ workspace_id           = "{workspace_id}"
 
             # Read the output incrementally
             while True:
-                line = await process.stdout.readline()
-                if not line:
-                    break
-                logger.info(line.decode().strip())
+                try:
+                    line = await process.stdout.readline()
+                    if not line:
+                        break
+                    logger.info(line.decode().strip())
+                except asyncio.LimitOverrunError as e:
+                    logger.info(f'Logging for shell sream failed because limit has been overrun: {e}')
+                except asyncio.ValueError as e:
+                    logger.info(f'Logging for shell sream failed because of seperator value error: {e}')
 
             # Read the error output incrementally
             while True:

@@ -63,7 +63,7 @@ main() {
     
     # Wait for resources to be fully created (adjust time as necessary)
     echo "Waiting for resources to be fully created..."
-    sleep 150
+    sleep 30
     
     # Configure inventory for Ansible (can commented out because main.tf:611 does this)
     echo "Configuring Ansible inventory..."
@@ -74,12 +74,7 @@ main() {
     pip install pywinrm
     
     # Start the DC playbook
-    run_ansible "$ansible_dir" "dc" &
-    dc_playbook_pid=$!
-    
-    # Wait for 5 minutes
-    echo "Waiting for 5 minutes before starting WEF and WIN10 provisioning..."
-    sleep 300
+    run_ansible "$ansible_dir" "dc"
     
     # Start WEF and WIN10 playbooks
     echo "Running WEF and WIN10 playbooks..."
