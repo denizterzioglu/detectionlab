@@ -215,7 +215,7 @@ workspace_id           = "{workspace_id}"
             output_dict = {
                 'dcPublicIp': terraform_output.get('dc_public_ip', {}).get('value', ''),
                 'fleetUrl': terraform_output.get('fleet_url', {}).get('value', ''),
-                'guacamoleUrl': terraform_output.get('guacamole_url', {}).get('value', ''),
+                'guacamoleUrl': f"{terraform_output.get('guacamole_url', {}).get('value', '')}/#/?username=vagrant&password=vagrant",
                 'loggerPublicIp': terraform_output.get('logger_public_ip', {}).get('value', ''),
                 'region': terraform_output.get('region', {}).get('value', ''),
                 'splunkUrl': terraform_output.get('splunk_url', {}).get('value', ''),
