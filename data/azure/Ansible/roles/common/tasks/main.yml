@@ -50,16 +50,6 @@
 
 - debug: msg="{{ autorunstowineventlog.stdout_lines }}"
 
-- name: Installing Red Team Tooling
-  win_shell: ".\\install-redteam.ps1"
-  args:
-    chdir: 'c:\vagrant\scripts'
-  register: redteam
-  failed_when: "'Exception' in redteam.stdout"
-  changed_when: "' already installed. Moving On.' not in redteam.stdout"
-
-- debug: msg="{{ redteam.stdout_lines }}"
-
 - name: Install Utilities 
   win_chocolatey:
     name:
@@ -73,6 +63,18 @@
   register: utils
 
 - debug: msg="{{ utils.stdout_lines }}"
+
+- name: Installing Red Team Tooling
+  win_shell: ".\\install-redteam.ps1"
+  args:
+    chdir: 'c:\vagrant\scripts'
+  register: redteam
+  failed_when: "'Exception' in redteam.stdout"
+  changed_when: "' already installed. Moving On.' not in redteam.stdout"
+
+- debug: msg="{{ redteam.stdout_lines }}"
+
+
 
 
 

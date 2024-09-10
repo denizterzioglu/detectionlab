@@ -74,7 +74,12 @@ main() {
     pip install pywinrm
     
     # Start the DC playbook
-    run_ansible "$ansible_dir" "dc"
+    run_ansible "$ansible_dir" "dc" &
+    dc_playbook_pid=$!
+    
+    # Wait for 5 minutes
+    echo "Waiting for 20 minutes before starting WEF and WIN10 provisioning..."
+    sleep 1200
     
     # Start WEF and WIN10 playbooks
     echo "Running WEF and WIN10 playbooks..."
