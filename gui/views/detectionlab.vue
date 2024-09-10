@@ -7,6 +7,7 @@ import outputs from './outputs.vue';
 // Reactive state for lab generation
 const labState = reactive({
   isLabGenerated: false,
+  isLoading: false,
   generatedPlatform: null,
 });
 
@@ -35,7 +36,7 @@ button{
     hr
 
 // Show different content based on global state
-div(v-if="!labState.isLabGenerated") 
+div(v-if="!labState.isLabGenerated && !labState.isLoading") 
     div.mb-6
         form
             #select-platform.field.has-addons
@@ -54,10 +55,7 @@ div(v-if="!labState.isLabGenerated")
     div(v-show="selectedPlatformPaw === 'Azure'")
         azure
 
-div(v-if="labState.isLabGenerated")
-    h3 Lab Environment Generated
-    p The lab environment for {{ labState.generatedPlatform }} has been successfully generated.
-    // Include logic to show additional details or redirect
+div(v-if="labState.isLabGenerated || labState.isLoading")
     outputs
 </template>
     

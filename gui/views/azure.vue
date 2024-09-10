@@ -49,6 +49,9 @@ const generateLab = () => {
     return;
   }
 
+  labState.isLoading = true;
+  labState.generatedPlatform = 'Azure';
+
   $api.post("/plugin/detectionlab/update-azure-variables", formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
@@ -66,8 +69,8 @@ const generateLab = () => {
       });
 
       // Update global state to indicate lab is generated
+      labState.isLoading = false;
       labState.isLabGenerated = true;
-      labState.generatedPlatform = 'Azure'; // Indicate platform
 
     } else {
       alert('An error occurred.');

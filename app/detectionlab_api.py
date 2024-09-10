@@ -204,7 +204,7 @@ workspace_id           = "{workspace_id}"
             logger.exception('An error occurred during the Azure deployment process.')
             return web.json_response({'success': False, 'error': str(e)})
     
-    def get_terraform_output():
+    def get_azure_terraform_output():
         try:
             # Define the directory where terraform is located
             terraform_directory = os.path.join(os.getcwd(), 'plugins/detectionlab/data/azure/Terraform')
