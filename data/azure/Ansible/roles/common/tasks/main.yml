@@ -50,18 +50,6 @@
 
 - debug: msg="{{ autorunstowineventlog.stdout_lines }}"
 
-- name: Install Utilities 
-  win_chocolatey:
-    name:
-    - NotepadPlusPlus
-    - GoogleChrome
-    - WinRar
-    - wireshark
-    - winpcap
-    state: present
-    ignore_checksums: true
-  register: utils
-
 - debug: msg="{{ utils.stdout_lines }}"
 
 - name: Installing Red Team Tooling
