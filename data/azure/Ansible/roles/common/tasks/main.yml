@@ -50,8 +50,6 @@
 
 - debug: msg="{{ autorunstowineventlog.stdout_lines }}"
 
-- debug: msg="{{ utils.stdout_lines }}"
-
 - name: Installing Red Team Tooling
   win_shell: ".\\install-redteam.ps1"
   args:
