@@ -4,18 +4,10 @@ import proxmox from './proxmox.vue';
 import azure from './azure.vue';
 import outputs from './outputs.vue';
 
-// Reactive state for lab generation
-const labState = reactive({
-  isLabGenerated: false,
-  isLoading: false,
-  generatedPlatform: null,
-});
-
-// Provide this state to all child components
-provide("labState", labState);
-
 const platforms = ['Azure', 'Proxmox'];
-const selectedPlatformPaw = ref('');
+const selectedPlatform = ref('');
+// Provide this state to all child components
+provide("selectedPlatform", selectedPlatform);
 </script>
 
 <style scoped>
@@ -36,26 +28,26 @@ button{
     hr
 
 // Show different content based on global state
-div(v-if="!labState.isLabGenerated && !labState.isLoading") 
+div(v-if="!labState.isGenerated && !labState.isLoading") 
     div.mb-6
         form
             #select-platform.field.has-addons
                 label.label.mr-5(style="margin-top: 4px;")  Select a Platform
                 .control.is-expanded
                     .select.is-small.is-fullwidth
-                        select(v-model="selectedPlatformPaw")
+                        select(v-model="selectedPlatform")
                             option(value="" disabled selected) Select a platform
                             template(v-for="platform of platforms" :key="platform")
                                 option(v-bind:value="platform" v-text="`${platform}`")
-    div.has-text-centered.content(v-show="!selectedPlatformPaw")
+    div.has-text-centered.content(v-show="!selectedPlatform")
         p Select a platform to get started
 
-    div(v-show="selectedPlatformPaw === 'Proxmox'")
+    div(v-show="selectedPlatform === 'Proxmox'")
         proxmox
-    div(v-show="selectedPlatformPaw === 'Azure'")
+    div(v-show="selectedPlatform === 'Azure'")
         azure
 
-div(v-if="labState.isLabGenerated || labState.isLoading")
+div(v-else)
     outputs
 </template>
     

@@ -15,14 +15,14 @@ const terraformOutputs = ref({
 });
 
 const $api = inject("$api");
-const labState = inject("labState");
+const selectedPlatform = inject("selectedPlatform");
 
 const errorMessage = ref(null);
 
 // Fetch the Terraform output from the backend
 const fetchTerraformOutput = async () => {
   try {
-    if (labState.generatedPlatform == "Azure") {
+    if (selectedPlatform == "Azure") {
       const response = await $api.get("/api/detectionlab/azure-terraform-output");
       terraformOutputs.value = response.data;
       isLoading.value = false;
@@ -39,29 +39,28 @@ onMounted(() => {
 </script>
 
 <template lang="pug">
-  div(v-if="labState.isLoading" class="loading") Loading Terraform output...
-  
-  div(v-else-if="errorMessage" class="error")
-    p {{ errorMessage }}
+div(v-if="labState.isLoading" class="loading") Lab is being generated...
+div(v-else-if="errorMessage" class="error")
+  p {{ errorMessage }}
 
-  div(v-else)
-    h3 {{ labState.generatedPlatform }}Lab Environment Tools
-    p Region: {{ terraformOutputs.region }}
-    hr
+div(v-else)
+  h3 {{ selectedPlatform }}Lab Environment Tools
+  p Region: {{ terraformOutputs.region }}
+  hr
 
-    div.tool-section
-      h4 Public IPs
-      ul
-        li Domain Controller: {{ terraformOutputs.dcPublicIp }}
-        li Logger: {{ terraformOutputs.loggerPublicIp }}
-        li Windows 10: {{ terraformOutputs.win10PublicIp }}
-        li Windows Event Forwarder: {{ terraformOutputs.wefPublicIp }}
+  div.tool-section
+    h4 Public IPs
+    ul
+      li Domain Controller: {{ terraformOutputs.dcPublicIp }}
+      li Logger: {{ terraformOutputs.loggerPublicIp }}
+      li Windows 10: {{ terraformOutputs.win10PublicIp }}
+      li Windows Event Forwarder: {{ terraformOutputs.wefPublicIp }}
 
-    div.tool-section
-      h4 Access Tools
-      button(@click="window.open(terraformOutputs.fleetUrl, '_blank')" class="button is-link") Open Fleet
-      button(@click="window.open(terraformOutputs.guacamoleUrl, '_blank')" class="button is-link") Open Guacamole
-      button(@click="window.open(terraformOutputs.splunkUrl, '_blank')" class="button is-link") Open Splunk
+  div.tool-section
+    h4 Access Tools
+    button(@click="window.open(terraformOutputs.fleetUrl, '_blank')" class="button is-link") Open Fleet
+    button(@click="window.open(terraformOutputs.guacamoleUrl, '_blank')" class="button is-link") Open Guacamole
+    button(@click="window.open(terraformOutputs.splunkUrl, '_blank')" class="button is-link") Open Splunk
       button(@click="window.open(terraformOutputs.velociraptorUrl, '_blank')" class="button is-link") Open Velociraptor
 </template>
 

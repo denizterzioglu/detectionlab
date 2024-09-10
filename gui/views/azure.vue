@@ -3,7 +3,6 @@ import { inject, ref } from "vue";
 import { toast } from "bulma-toast";
 
 const $api = inject("$api");
-const labState = inject("labState"); // Inject global state for lab generation
 
 const sshKey = ref(null); // Reference to hold the SSH key file
 
@@ -70,7 +69,7 @@ const generateLab = () => {
 
       // Update global state to indicate lab is generated
       labState.isLoading = false;
-      labState.isLabGenerated = true;
+      labState.isGenerated = true;
 
     } else {
       alert('An error occurred.');
