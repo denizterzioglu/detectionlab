@@ -1,6 +1,10 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { inject, ref, onMounted } from "vue";
 import axios from "axios";
+import { useDetectionLabStore } from "../../stores/detectionLabStore";
+
+const detectionLabStore = useDetectionLabStore();
+const $api = inject("$api");
 
 const terraformOutputs = ref({
   dcPublicIp: '',
@@ -15,14 +19,12 @@ const terraformOutputs = ref({
 });
 
 const $api = inject("$api");
-const selectedPlatform = inject("selectedPlatform");
-
 const errorMessage = ref(null);
 
 // Fetch the Terraform output from the backend
 const fetchTerraformOutput = async () => {
   try {
-    if (selectedPlatform == "Azure") {
+    if (detectionLabStore.generatedPlatform == "Azure") {
       const response = await $api.get("/api/detectionlab/azure-terraform-output");
       terraformOutputs.value = response.data;
       isLoading.value = false;
@@ -33,20 +35,60 @@ const fetchTerraformOutput = async () => {
   }
 };
 
+const deleteLab = async () => {
+  try {
+    if (detectionLabStore.generatedPlatform == 'Azure') {
+      const response = await $api.get("/plugin/detectionlab/delete-azure-lab")
+      const data = response.json()
+      if (data.success) {
+        alert('Lab was deprovisioned successfully.');
+        toast({
+          message: "Lab deprovisioned",
+          position: "bottom-right",
+          type: "is-success",
+          dismissible: true,
+          pauseOnHover: true,
+          duration: 2000,
+        });
+        detectionLabStore.resetLabState()
+      } else {
+        alert('An error occurred.');
+        toast({
+          message: "Error accessing API",
+          position: "bottom-right",
+          type: "is-warning",
+          dismissible: true,
+          pauseOnHover: true,
+          duration: 2000,
+        });
+      }
+    } else {
+      detectionLabStore.resetLabState()
+    }
+    
+  } catch (error) {
+    errorMessage.value = "Failed to delete lab";
+    console.error(error);
+  }
+
+}
+
 onMounted(() => {
   fetchTerraformOutput();
 });
 </script>
 
 <template lang="pug">
-div(v-if="labState.isLoading" class="loading") Lab is being generated...
+div(v-if="detectionLabStore.isLoading" class="loading") Lab is being generated...
 div(v-else-if="errorMessage" class="error")
   p {{ errorMessage }}
 
 div(v-else)
-  h3 {{ selectedPlatform }}Lab Environment Tools
+  h3 {{ detectionLabStore.generatedPlatform }}Lab Environment Tools
   p Region: {{ terraformOutputs.region }}
   hr
+
+  button(@click="{{ deleteLab }}" class="button is-link") Delete Lab
 
   div.tool-section
     h4 Public IPs
