@@ -121,7 +121,7 @@ class DetectionLabAPI:
 
         return "All prerequisites are met."
 
-    async def update_azure_variables_and_run_scripts(self, request):
+    async def generate_azure_lab(self, request):
         """
         This endpoint updates the terraform.tfvars file, performs Azure authentication, and runs Terraform and Ansible scripts.
         """

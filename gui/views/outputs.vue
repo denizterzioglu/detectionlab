@@ -58,7 +58,6 @@ const deleteLab = async () => {
         });
       }
     } else {
-      $api.post('/plugin/detectionlab/reset-lab')
       //Update for Proxmox and further
     }
   } catch (error) {

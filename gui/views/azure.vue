@@ -46,8 +46,8 @@ const generateLab = () => {
     alert("Please upload an SSH key file.");
     return;
   }
-
-  $api.post("/plugin/detectionlab/update-azure-variables", formData, {
+  
+  $api.post("/plugin/detectionlab/generate-azure-lab", formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
   .then(response => response.json())
@@ -85,6 +85,7 @@ const generateLab = () => {
       duration: 2000,
     });
   });
+  location.reload();
 };
 </script>
 
