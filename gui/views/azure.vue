@@ -1,10 +1,8 @@
 <script setup>
 import { inject, ref } from "vue";
 import { toast } from "bulma-toast";
-import { useDetectionLabStore } from "../../stores/detectionLabStore";
 
 const $api = inject("$api");
-const detectionLabStore = useDetectionLabStore();
 const sshKey = ref(null); // Reference to hold the SSH key file
 
 const form = ref({
@@ -49,8 +47,6 @@ const generateLab = () => {
     return;
   }
 
-  detectionLabStore.setLoading('Azure');
-
   $api.post("/plugin/detectionlab/update-azure-variables", formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
@@ -66,10 +62,6 @@ const generateLab = () => {
         pauseOnHover: true,
         duration: 2000,
       });
-
-      // Update global state to indicate lab is generated
-      detectionLabStore.setGenerated();
-
     } else {
       alert('An error occurred.');
       toast({

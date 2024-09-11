@@ -1,13 +1,30 @@
 <script setup>
-import { provide, inject, ref, reactive, computed } from "vue";
-import { useDetectionLabStore } from "../../stores/detectionLabStore";
+import { provide, inject, ref } from "vue";
 import proxmox from './proxmox.vue';
 import azure from './azure.vue';
 import outputs from './outputs.vue';
 
-const detectionLabStore = useDetectionLabStore();
 const platforms = ['Azure', 'Proxmox'];
+const selectedPlatform = ref('');
+const $api = inject("$api");
 
+const labState = ref({
+    isLoading: false,
+    isGenerated: false,
+    generatedPlatform: null,
+  });
+
+const fetchLabState = async () => {
+  try {
+    const response = await $api.get("/plugin/detectionlab/get-state");
+    labState.value = response.data;
+  } catch (error) {
+    console.error("Failed to fetch lab state:", error);
+  }
+};
+
+fetchLabState();
+provide("labState", labState);
 </script>
 
 <style scoped>
@@ -28,7 +45,7 @@ button{
     hr
 
 // Show different content based on global state
-div(v-if="!detectionLabStore.isGenerated && !detectionLabStore.isLoading") 
+div(v-if="!labState.isGenerated && !labState.isLoading") 
     div.mb-6
         form
             #select-platform.field.has-addons

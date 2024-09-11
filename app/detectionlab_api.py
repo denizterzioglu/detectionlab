@@ -13,6 +13,10 @@ from app.service.auth_svc import for_all_public_methods, check_authorization
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+home = os.getenv("HOME")
+cwd = os.getcwd()
+plugin = f"{cwd}/plugins/detectionlab"
+
 @for_all_public_methods(check_authorization)
 class DetectionLabAPI:
 
@@ -21,6 +25,13 @@ class DetectionLabAPI:
         self.auth_svc = self.services.get('auth_svc')
         self.data_svc = self.services.get('data_svc')
 
+        # Initial state (equivalent to Pinia store)
+        self.state = {
+            "isLoading": False,
+            "isGenerated": False,
+            "generatedPlatform": None
+        }
+
     @template('detectionlab.html')
     async def mirror(self, request):
         """
@@ -28,6 +39,35 @@ class DetectionLabAPI:
         """
         request_body = json.loads(await request.read())
         return web.json_response(request_body)
+
+    # Currently these are API endpoints to enable the state changes to be run independependently of the main program
+    async def get_lab_state(self, request):
+        """
+        API endpoint to get the current state of the lab.
+        """
+        try:
+            logger.info("Fetching lab state")
+            logger.info(self.state)
+            return web.json_response(self.state)
+        except Exception as e:
+            logger.error(f"Error fetching lab state: {e}")
+            return web.json_response({"error": "Internal Server Error"}, status=500)
+
+    async def delete_lab(self, request):
+        """
+        API endpoint to delete the lab and reset the lab state.
+        """
+        if self.state["generatedPlatform"] == 'Azure': 
+            commands = [
+                f'git checkout -q -- {plugin}/data/azure/Ansible/inventory.yml',
+                'az group delete --name DetectionLab-terraform'
+            ]
+            # Start all commands in parallel
+            processes = [subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for command in commands]
+        self.state["isLoading"] = False
+        self.state["isGenerated"] = False
+        self.state["generatedPlatform"] = None
+        return web.json_response({'success': True, 'state': self.state})
 
     def check_ssh_keypair(self, keypair_path: str) -> bool:
         """
@@ -87,9 +127,9 @@ class DetectionLabAPI:
         """
         try:
             logger.info('Azure deployment started')
-            home = os.getenv("HOME")
-            cwd = os.getcwd()
-            plugin = f"{cwd}/plugins/detectionlab"
+
+            self.state["isLoading"] = True
+            self.state["generatedPlatform"] = 'Azure'
 
             # Handle multipart/form-data
             reader = await request.multipart()
@@ -198,13 +238,15 @@ workspace_id           = "{workspace_id}"
                 })
 
             logger.info('Shell script executed successfully.')
+            self.state["isGenerated"] = True
+            self.state["isLoading"] = False
             return web.json_response({'success': True, 'output': 'Script executed successfully'})
 
         except Exception as e:
             logger.exception('An error occurred during the Azure deployment process.')
             return web.json_response({'success': False, 'error': str(e)})
     
-    def get_azure_terraform_output():
+    def get_azure_terraform_output(self, request):
         try:
             # Define the directory where terraform is located
             terraform_directory = os.path.join(os.getcwd(), 'plugins/detectionlab/data/azure/Terraform')

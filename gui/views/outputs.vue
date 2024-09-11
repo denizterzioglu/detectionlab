@@ -1,9 +1,6 @@
 <script setup>
 import { inject, ref, onMounted } from "vue";
 import axios from "axios";
-import { useDetectionLabStore } from "../../stores/detectionLabStore";
-
-const detectionLabStore = useDetectionLabStore();
 
 const terraformOutputs = ref({
   dcPublicIp: '',
@@ -20,13 +17,13 @@ const terraformOutputs = ref({
 const $api = inject("$api");
 const errorMessage = ref(null);
 
-// Fetch the Terraform output from the backend
+let labState = inject("labState")
+
 const fetchTerraformOutput = async () => {
   try {
-    if (detectionLabStore.generatedPlatform == "Azure") {
-      const response = await $api.get("/api/detectionlab/azure-terraform-output");
+    if (labState.generatedPlatform == "Azure") {
+      const response = await $api.get("/plugin/detectionlab/azure-terraform-output");
       terraformOutputs.value = response.data;
-      isLoading.value = false;
     }
   } catch (error) {
     errorMessage.value = "Failed to load data";
@@ -36,9 +33,9 @@ const fetchTerraformOutput = async () => {
 
 const deleteLab = async () => {
   try {
-    if (detectionLabStore.generatedPlatform == 'Azure') {
-      const response = await $api.get("/plugin/detectionlab/delete-azure-lab")
-      const data = response.json()
+    if (labState.generatedPlatform == 'Azure') {
+      const response = await $api.get("/plugin/detectionlab/delete-azure-lab");
+      const data = await response.json();
       if (data.success) {
         alert('Lab was deprovisioned successfully.');
         toast({
@@ -49,7 +46,6 @@ const deleteLab = async () => {
           pauseOnHover: true,
           duration: 2000,
         });
-        detectionLabStore.resetLabState()
       } else {
         alert('An error occurred.');
         toast({
@@ -62,14 +58,13 @@ const deleteLab = async () => {
         });
       }
     } else {
-      detectionLabStore.resetLabState()
+      $api.post('/plugin/detectionlab/reset-lab')
+      //Update for Proxmox and further
     }
-    
   } catch (error) {
     errorMessage.value = "Failed to delete lab";
     console.error(error);
   }
-
 }
 
 onMounted(() => {
@@ -78,31 +73,32 @@ onMounted(() => {
 </script>
 
 <template lang="pug">
-div(v-if="detectionLabStore.isLoading" class="loading") Lab is being generated...
+div(v-if="labState.isLoading" class="loading") Lab is being generated...
 div(v-else-if="errorMessage" class="error")
   p {{ errorMessage }}
 
 div(v-else)
-  h3 {{ detectionLabStore.generatedPlatform }}Lab Environment Tools
-  p Region: {{ terraformOutputs.region }}
+  h3 {{ labState.generatedPlatform }}Lab Environment Tools
+  p Region: {{ terraformOutputs.value.region }}
   hr
 
-  button(@click="{{ deleteLab }}" class="button is-link") Delete Lab
+  button(@click="deleteLab") Deprovision Lab Environment
 
   div.tool-section
     h4 Public IPs
     ul
-      li Domain Controller: {{ terraformOutputs.dcPublicIp }}
-      li Logger: {{ terraformOutputs.loggerPublicIp }}
-      li Windows 10: {{ terraformOutputs.win10PublicIp }}
-      li Windows Event Forwarder: {{ terraformOutputs.wefPublicIp }}
+      li Domain Controller: {{ terraformOutputs.value.dcPublicIp }}
+      li Logger: {{ terraformOutputs.value.loggerPublicIp }}
+      li Windows 10: {{ terraformOutputs.value.win10PublicIp }}
+      li Windows Event Forwarder: {{ terraformOutputs.value.wefPublicIp }}
+
 
   div.tool-section
     h4 Access Tools
-    button(@click="window.open(terraformOutputs.fleetUrl, '_blank')" class="button is-link") Open Fleet
-    button(@click="window.open(terraformOutputs.guacamoleUrl, '_blank')" class="button is-link") Open Guacamole
-    button(@click="window.open(terraformOutputs.splunkUrl, '_blank')" class="button is-link") Open Splunk
-      button(@click="window.open(terraformOutputs.velociraptorUrl, '_blank')" class="button is-link") Open Velociraptor
+    button(@click="window.open(terraformOutputs.value.fleetUrl, '_blank')" class="button is-link") Open Fleet
+    button(@click="window.open(terraformOutputs.value.guacamoleUrl, '_blank')" class="button is-link") Open Guacamole
+    button(@click="window.open(terraformOutputs.value.splunkUrl, '_blank')" class="button is-link") Open Splunk
+      button(@click="window.open(terraformOutputs.value.velociraptorUrl, '_blank')" class="button is-link") Open Velociraptor
 </template>
 
 <style scoped>
