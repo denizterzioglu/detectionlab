@@ -1,13 +1,13 @@
 <script setup>
 import { provide, inject, ref, reactive, computed } from "vue";
+import { useDetectionLabStore } from "../../stores/detectionLabStore";
 import proxmox from './proxmox.vue';
 import azure from './azure.vue';
 import outputs from './outputs.vue';
 
+const detectionLabStore = useDetectionLabStore();
 const platforms = ['Azure', 'Proxmox'];
-const selectedPlatform = ref('');
-// Provide this state to all child components
-provide("selectedPlatform", selectedPlatform);
+
 </script>
 
 <style scoped>
@@ -28,7 +28,7 @@ button{
     hr
 
 // Show different content based on global state
-div(v-if="!labState.isGenerated && !labState.isLoading") 
+div(v-if="!detectionLabStore.isGenerated && !detectionLabStore.isLoading") 
     div.mb-6
         form
             #select-platform.field.has-addons
