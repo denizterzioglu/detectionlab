@@ -4,7 +4,6 @@ import axios from "axios";
 import { useDetectionLabStore } from "../../stores/detectionLabStore";
 
 const detectionLabStore = useDetectionLabStore();
-const $api = inject("$api");
 
 const terraformOutputs = ref({
   dcPublicIp: '',
