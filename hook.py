@@ -21,7 +21,7 @@ async def enable(services):
     detectionlab_api = DetectionLabAPI(services)
     
     app.router.add_route('POST', '/plugin/detectionlab/mirror', detectionlab_api.mirror)
-    app.router.add_route('POST', '/plugin/detectionlab/update-proxmox-variables', detectionlab_api.update_proxmox_variables_and_run_scripts)
+    app.router.add_route('POST', '/plugin/detectionlab/generate-proxmox-lab', detectionlab_api.generate_proxmox_lab)
     app.router.add_route('POST', '/plugin/detectionlab/generate-azure-lab', detectionlab_api.generate_azure_lab)
     app.router.add_route('GET', '/plugin/detectionlab/azure-terraform-output', detectionlab_api.get_azure_terraform_output)
     app.router.add_route('GET', '/plugin/detectionlab/get-state', detectionlab_api.get_lab_state)

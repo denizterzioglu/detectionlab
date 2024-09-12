@@ -64,9 +64,11 @@ class DetectionLabAPI:
             ]
             # Start all commands in parallel
             processes = [subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for command in commands]
+            logger.info('Azure resources were deleted and Ansible inventory was reset.')
         self.state["isLoading"] = False
         self.state["isGenerated"] = False
         self.state["generatedPlatform"] = None
+        logger.info('Lab state has been reset.')
         return web.json_response({'success': True, 'state': self.state})
 
     def check_ssh_keypair(self, keypair_path: str) -> bool:
@@ -283,7 +285,7 @@ workspace_id           = "{workspace_id}"
             return None
 
 
-    async def update_proxmox_variables_and_run_scripts(self, request):
+    async def generate_proxmox_lab(self, request):
         """
         This endpoint updates the variables.json file and runs the necessary shell scripts
         """

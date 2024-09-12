@@ -35,7 +35,7 @@ export default {
         };
     },
     methods: {
-        generateJson() {
+        generateLab() {
             const variablesJson = {
                 proxmox_host: this.proxmoxHost,
                 proxmox_node: this.proxmoxNode,
@@ -52,7 +52,7 @@ export default {
 
             // Send the JSON data to the server
             this.$api
-                .post("/plugin/detectionlab/update-proxmox-variables", variablesJson)
+                .post("/plugin/detectionlab/generate-proxmox-lab", variablesJson)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -145,7 +145,7 @@ form
     label.label Proxmox ISO Storage Pool
     input.input(v-model="proxmoxIsoStoragePool", type="text", placeholder="Enter ISO Storage Pool")
 
-button.button.is-primary.is-fullwidth(@click="generateJson")
+button.button.is-primary.is-fullwidth(@click="generateLab")
     span.icon
     i.fas.fa-download
     span Generate Lab Environment
