@@ -99,12 +99,15 @@ class DetectionLabAPI:
         """
         API endpoint to delete the lab and reset the lab state.
         """
-        if self.state["generatedPlatform"] == 'Azure': 
-            command = 'az group delete --name DetectionLab-terraform'
-    
+        logger.info(f"Deprovisioning the lab on {self.state['generatedPlatform']}")
+        
+        if self.state['generatedPlatform'] == 'Azure': 
+            command = 'echo y | az group delete --name DetectionLab-terraform'
+            
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)   
             
             stdout, stderr = await asyncio.to_thread(process.communicate)
+            
             if process.returncode != 0:
                 logger.error(f'Command "{command}" failed with error: {stderr.decode("utf-8")}')
                 return web.json_response({
@@ -115,12 +118,17 @@ class DetectionLabAPI:
                 logger.info(f'Command "{command}" completed successfully')
                 logger.debug(f'STDOUT: {stdout.decode("utf-8").strip()}')
                 logger.debug(f'STDERR: {stderr.decode("utf-8").strip()}')
+                
             logger.info('Azure resources were deleted')
+            
+        # Reset lab state
         self.state["isLoading"] = False
         self.state["isGenerated"] = False
         self.state["generatedPlatform"] = None
         logger.info('Lab state has been reset.')
+        
         return web.json_response({'success': True, 'state': self.state})
+
 
     def check_ssh_keypair(self, keypair_path: str) -> bool:
         """

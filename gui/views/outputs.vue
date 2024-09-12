@@ -66,6 +66,11 @@ const deleteLab = async () => {
   }
 };
 
+const openInNewTab = (url) => {
+  window.open(url, '_blank').focus();
+}
+
+
 onMounted(() => {
   fetchTerraformOutput();
 });
@@ -91,10 +96,10 @@ div(v-else-if="labState.isGenerated" class="lab-container")
   div.tool-section
     h4 Access Tools
     div.buttons-container
-      button(@click="window.open(terraformOutputs.fleetUrl, '_blank')" class="button is-link") Open Fleet
-      button(@click="window.open(terraformOutputs.guacamoleUrl, '_blank')" class="button is-link") Open Guacamole
-      button(@click="window.open(terraformOutputs.splunkUrl, '_blank')" class="button is-link") Open Splunk
-      button(@click="window.open(terraformOutputs.velociraptorUrl, '_blank')" class="button is-link") Open Velociraptor
+      button(@click="openInNewTab(terraformOutputs.fleetUrl)" class="button is-link") Open Fleet
+      button(@click="openInNewTab(terraformOutputs.guacamoleUrl, '_blank')" class="button is-link") Open Guacamole
+      button(@click="openInNewTab(terraformOutputs.splunkUrl, '_blank')" class="button is-link") Open Splunk
+      button(@click="openInNewTab(terraformOutputs.velociraptorUrl, '_blank')" class="button is-link") Open Velociraptor
 div(v-else class="error")
   p {{ errorMessage }}
 </template>
