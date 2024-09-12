@@ -29,7 +29,7 @@ class DetectionLabAPI:
         self.state = {
             "isLoading": False,
             "isGenerated": False,
-            "generatedPlatform": None
+            "generatedPlatform": ''
         }
 
     @template('detectionlab.html')
@@ -40,7 +40,6 @@ class DetectionLabAPI:
         request_body = json.loads(await request.read())
         return web.json_response(request_body)
 
-    # Currently these are API endpoints to enable the state changes to be run independependently of the main program
     async def get_lab_state(self, request):
         """
         API endpoint to get the current state of the lab.
@@ -53,18 +52,70 @@ class DetectionLabAPI:
             logger.error(f"Error fetching lab state: {e}")
             return web.json_response({"error": "Internal Server Error"}, status=500)
 
+    async def get_azure_terraform_output(self, request):
+        """
+        API endpoint to get the access points to the tools
+        """
+        try:
+            # Define the directory where terraform is located
+            terraform_directory = os.path.join(os.getcwd(), 'plugins/detectionlab/data/azure/Terraform')
+            
+            logger.info(f"Taking outputs from: {terraform_directory}")
+
+
+            # Run the terraform output command
+            command = ['terraform', 'output', '-json']
+            result = subprocess.run(command, cwd=terraform_directory, capture_output=True, text=True, check=True)
+
+            # Parse the JSON output from Terraform
+            terraform_output = json.loads(result.stdout)
+
+            logger.info(terraform_output)
+
+            # Extract necessary fields from the output
+            output_dict = {
+                'dcPublicIp': terraform_output.get('dc_public_ip', {}).get('value', ''),
+                'fleetUrl': terraform_output.get('fleet_url', {}).get('value', ''),
+                'guacamoleUrl': f"{terraform_output.get('guacamole_url', {}).get('value', '')}/#/?username=vagrant&password=vagrant",
+                'loggerPublicIp': terraform_output.get('logger_public_ip', {}).get('value', ''),
+                'region': terraform_output.get('region', {}).get('value', ''),
+                'splunkUrl': terraform_output.get('splunk_url', {}).get('value', ''),
+                'velociraptorUrl': terraform_output.get('velociraptor_url', {}).get('value', ''),
+                'wefPublicIp': terraform_output.get('wef_public_ip', {}).get('value', ''),
+                'win10PublicIp': terraform_output.get('win10_public_ip', {}).get('value', '')
+            }
+
+            # Return or print the extracted data as JSON
+            return web.json_response(output_dict)
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error running terraform: {e}")
+            return web.json_response({"error": "Internal Server Error"}, status=500)
+        except Exception as e:
+            print(f"General error: {e}")
+            return web.json_response({"error": "Internal Server Error"}, status=500)
+
     async def delete_lab(self, request):
         """
         API endpoint to delete the lab and reset the lab state.
         """
         if self.state["generatedPlatform"] == 'Azure': 
-            commands = [
-                f'git checkout -q -- {plugin}/data/azure/Ansible/inventory.yml',
-                'az group delete --name DetectionLab-terraform'
-            ]
-            # Start all commands in parallel
-            processes = [subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for command in commands]
-            logger.info('Azure resources were deleted and Ansible inventory was reset.')
+            command = 'az group delete --name DetectionLab-terraform'
+    
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)   
+            
+            stdout, stderr = await asyncio.to_thread(process.communicate)
+            if process.returncode != 0:
+                logger.error(f'Command "{command}" failed with error: {stderr.decode("utf-8")}')
+                return web.json_response({
+                    'success': False,
+                    'error': f'Command "{command}" failed with error: {stderr.decode("utf-8")}'
+                })
+            else:
+                logger.info(f'Command "{command}" completed successfully')
+                logger.debug(f'STDOUT: {stdout.decode("utf-8").strip()}')
+                logger.debug(f'STDERR: {stderr.decode("utf-8").strip()}')
+            logger.info('Azure resources were deleted')
         self.state["isLoading"] = False
         self.state["isGenerated"] = False
         self.state["generatedPlatform"] = None
@@ -239,43 +290,6 @@ workspace_id           = "{workspace_id}"
         except Exception as e:
             logger.exception('An error occurred during the Azure deployment process.')
             return web.json_response({'success': False, 'error': str(e)})
-    
-    def get_azure_terraform_output(self, request):
-        try:
-            # Define the directory where terraform is located
-            terraform_directory = os.path.join(os.getcwd(), 'plugins/detectionlab/data/azure/Terraform')
-
-            # Run the terraform output command
-            command = ['terraform', 'output', '-json']
-            result = subprocess.run(command, cwd=terraform_directory, capture_output=True, text=True, check=True)
-
-            # Parse the JSON output from Terraform
-            terraform_output = json.loads(result.stdout)
-
-            # Extract necessary fields from the output
-            output_dict = {
-                'dcPublicIp': terraform_output.get('dc_public_ip', {}).get('value', ''),
-                'fleetUrl': terraform_output.get('fleet_url', {}).get('value', ''),
-                'guacamoleUrl': f"{terraform_output.get('guacamole_url', {}).get('value', '')}/#/?username=vagrant&password=vagrant",
-                'loggerPublicIp': terraform_output.get('logger_public_ip', {}).get('value', ''),
-                'region': terraform_output.get('region', {}).get('value', ''),
-                'splunkUrl': terraform_output.get('splunk_url', {}).get('value', ''),
-                'velociraptorUrl': terraform_output.get('velociraptor_url', {}).get('value', ''),
-                'wefPublicIp': terraform_output.get('wef_public_ip', {}).get('value', ''),
-                'win10PublicIp': terraform_output.get('win10_public_ip', {}).get('value', '')
-            }
-
-            # Return or print the extracted data as JSON
-            return output_dict
-
-        except subprocess.CalledProcessError as e:
-            print(f"Error running terraform: {e}")
-            return None
-
-        except Exception as e:
-            print(f"General error: {e}")
-            return None
-
 
     async def generate_proxmox_lab(self, request):
         """
@@ -338,5 +352,4 @@ workspace_id           = "{workspace_id}"
         except Exception as e:
             logger.exception(f'Failed to generate Proxmox lab: {str(e)}')
             return web.json_response({'success': False, 'error': str(e)})
-
-    
+        

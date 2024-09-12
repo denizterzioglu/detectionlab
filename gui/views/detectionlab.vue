@@ -11,7 +11,7 @@ const $api = inject("$api");
 const labState = ref({
     isLoading: false,
     isGenerated: false,
-    generatedPlatform: null,
+    generatedPlatform: '',
   });
 
 const fetchLabState = async () => {

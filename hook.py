@@ -25,4 +25,4 @@ async def enable(services):
     app.router.add_route('POST', '/plugin/detectionlab/generate-azure-lab', detectionlab_api.generate_azure_lab)
     app.router.add_route('GET', '/plugin/detectionlab/azure-terraform-output', detectionlab_api.get_azure_terraform_output)
     app.router.add_route('GET', '/plugin/detectionlab/get-state', detectionlab_api.get_lab_state)
-    app.router.add_route('POST', '/plugin/detectionlab/delete-azure-lab', detectionlab_api.delete_lab)
+    app.router.add_route('GET', '/plugin/detectionlab/delete-azure-lab', detectionlab_api.delete_lab)
